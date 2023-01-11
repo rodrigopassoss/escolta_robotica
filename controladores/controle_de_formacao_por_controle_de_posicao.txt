@@ -1,0 +1,62 @@
+function obj = controle_e_navegacao(obj,fi_d,l_d,escoltado)
+            
+            
+%             if isempty(obj.angParaEscoltado)
+%                 angE = 0;
+%             else
+%                 angE = obj.angParaEscoltado(end);
+%             end
+%             [~,I] = min(abs(obj.angs-angE));
+%             l_ei = obj.v_sensor(I);
+%             
+            th_e = escoltado.Pos(3);
+%             th_i = obj.Pos(3);
+%             fi = atan2(obj.Pos(2)-escoltado.Pos(2),obj.Pos(1)-escoltado.Pos(1));
+%             fi_ei = fi-th_e;
+%             gamma_ei = (th_e + fi_ei) - th_i;       
+            obj.Pdes = escoltado.Pos(1:2) + l_d.*[cos(-fi_d+th_e);sin(-fi_d+th_e)];
+            
+            l_ei = norm(escoltado.Pos(1:2)-obj.Pos(1:2));
+            fi = atan2(obj.Pos(2)-escoltado.Pos(2),obj.Pos(1)-escoltado.Pos(1));
+            fi_ei = -fi+th_e;
+            
+            d = norm(obj.Pdes - obj.Pos(1:2));
+            theta_d = atan2(obj.Pdes(2) - obj.Pos(2),obj.Pdes(1) - obj.Pos(1)); % �ngulo de destino de -pi a pi
+            theta_e = theta_d - obj.Pos(3);
+            % converte theta_e para -pi a pi
+            if theta_e > pi, theta_e = theta_e - 2*pi; end
+            if theta_e < -pi, theta_e = theta_e + 2*pi; end
+            kw = 0.43;k1 = 1;
+            W = k1*obj.Wmax*tanh(kw*theta_e); 
+            if d < 5, W = 0; end
+            % converte theta_e para -pi/2 a pi/2
+            if theta_e > pi/2, theta_e = pi/2; end
+            if theta_e < -pi/2, theta_e = -pi/2; end
+            kv = 0.25;k2 = 1;
+            V = k2*obj.Vmax*tanh(kv*d)*cos(theta_e); 
+            %%% Velocidade Linear e Angular
+%             Vmax = obj.Vmax; %m�ximo � aproximadamente 34 cm/s
+%             Wmax = obj.Wmax; %m�ximo � aproximadamente 6 rad/s
+%             V = Vmax/2;
+%             W = Wmax/20;
+            
+            %%% saída da função de controle deve ser U = [U_d ; U_e] entrada
+            FI = obj.Modcin\[V ; W]; %FI = [FI_d ; FI_e];
+            obj.U = [obj.ganhoft].*FI;
+            
+            obj.Ud = obj.U;
+            % Saturação do sinal de controle
+            if abs(obj.U(1)) > 1
+                obj.U(1) = sign(obj.U(1));
+            end
+            if abs(obj.U(2)) > 1
+                obj.U(2) = sign(obj.U(2));
+            end
+            
+            % informações para o plot
+            obj.plotInfo.l_ei = [obj.plotInfo.l_ei l_ei];
+            obj.plotInfo.l_d  = [obj.plotInfo.l_d l_d];
+            obj.plotInfo.fi_ei = [obj.plotInfo.fi_ei fi_ei];
+            obj.plotInfo.fi_d  = [obj.plotInfo.fi_d fi_d];
+            
+end

@@ -51,8 +51,8 @@ yc = (vlimitey.*escoltado.raio);
 pxyc = [cos(theta) -sin(theta) ; sin(theta) cos(theta)]*[xc' ; yc'];
 xc3 = pxyc(1,:)+x;
 yc3 = pxyc(2,:)+y;
-fill(xc3,yc3,'c')
-plot([x x+escoltado.raio*cos(theta)],[y y+escoltado.raio*sin(theta)],'k');
+plot(xc3,yc3,'k')
+plot([x x+escoltado.raio*cos(theta)],[y y+escoltado.raio*sin(theta)],'r');
 
 [linhas , colunas] = size(A);
 xlim([-30 colunas+30])

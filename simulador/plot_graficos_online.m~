@@ -5,7 +5,7 @@ vlimitey = sin(aux)';
 
 hold off  
 plot(0,0,'.')
-plot(Ax,Ay,'sk','MarkerEdgeColor','k','MarkerSize',1);
+plot(Ax,Ay,'sk','MarkerEdgeColor')
 % image(A)
 % colormap(gray(2))
 hold on
@@ -24,6 +24,4 @@ for k = 1:nRobos
         formY = [formY robo(k).Pos(2)]; 
 end
 plot([formX formX(1)],[formY formY(1)],'--b');
-xlabel('x[cm]');
-ylabel('y[cm]')
 drawnow

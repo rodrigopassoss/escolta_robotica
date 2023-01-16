@@ -5,6 +5,10 @@ function A = updateMapa(Mapa,robo,nRobos)
     for k = 1:nRobos
         Bposx = [Bposx round(robo(k).Pos(1) + robo(k).raio*cos(2*pi*[0:99]/100))];
         Bposy = [Bposy round(robo(k).Pos(2) + robo(k).raio*sin(2*pi*[0:99]/100))];
+        if ((Bposx(end)<=0)||(Bposy(end)<=0))
+            display('pause ... Error');
+            pause
+        end
     end
     N = length(Bposx);
     A = Mapa;

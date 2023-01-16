@@ -148,7 +148,7 @@ classdef robo_escoltado
             % converte theta_e para -pi/2 a pi/2
             if theta_e > pi/2, theta_e = pi/2; end
             if theta_e < -pi/2, theta_e = -pi/2; end
-            vmax = 5;kv = 2.5;
+            vmax = 20;kv = 2.5;
             V = vmax*cos(theta_e);
 
             if norm(obj.Pos(1:2)-obj.Pdes)<3, V = 0; W = 0; end

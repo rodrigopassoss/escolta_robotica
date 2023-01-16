@@ -1,4 +1,4 @@
-function ZUADENTO_SIMULADOR(experimento,robo,escoltado,mapabmp,tempo_max,habilitaPlot,nRobos)
+function ZUADENTO_SIMULADOR(experimento,robo,escoltado,mapabmp,tempo_max,habilitaPlot,habilitaDinamica,nRobos)
   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% AQUI VAI O C�DIGO DO P3DX_SIM_CONTROL QUE VAI COME�AR COMO O BOT�O %%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,8 +34,11 @@ escoltado.Pdes = Pdes;
 tempo = 0:tamos:tempo_max;  % controle de tempo
 i = 0;  % contador
 
+d = norm(escoltado.Pos(1:2)-Pdes);
 colidiu = 0;
-while  (~colidiu && (i*tamos<tempo_max))
+l_d = experimento.l_d ;
+fi_d = experimento.fi_d;
+while  (~colidiu && (i*tamos<tempo_max) && d>5)
       % distancia maior que 5 cm ou vlin maior q 5 cm/s ou vrot maior que 0.1 rad/s
     tic     
     % atualiza��o das vari�veis de controle de tempo
@@ -62,17 +65,21 @@ while  (~colidiu && (i*tamos<tempo_max))
 
         %s2 = sensores no sistema de coordenadas do ambiente
         %  = com ru�do adicionado. Esse pode ser utilizado pelo controlador.
-        tamos_controle = 0.04; %atualizar a cada 40 ms
+        tamos_controle = 0.01; %atualizar a cada 40 ms
         if mod(tempo(i),tamos_controle) == 0
-                fi_d = (2*pi*(1-k)/nRobos); 
-                l_d = 45;
-                robo(k) = robo(k).controle_e_navegacao(i,tamos_controle,tempo(i),fi_d,l_d,escoltado); 
+%                 l_d = 45;
+%                 fi_d = 2*pi*(k-1)/nRobos;
+                robo(k) = robo(k).controle_e_navegacao(i,tamos_controle,tempo(i),l_d,fi_d(k),escoltado); 
         end
 
         %%%%%%%%%%%%%%%%%%%%% CONTROLADOR FIM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         %%%%%%%%%%%%%%%%%%% SIMULAÇÃO INÍCIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        robo(k) = robo(k).simulacao(tamos,i);
+        if habilitaDinamica==1
+            robo(k) = robo(k).simulacao(tamos,i);
+        else
+            robo(k) = robo(k).simulacao_apenas_cinematica(tamos,i);
+        end
 
 %         dist = sqrt( (Pdes(1)-Pos(1))^2 + (Pdes(2)-Pos(2))^2 ); % atualiza a dist�ncia para o destino
          if robo(k).colidiu
@@ -81,7 +88,7 @@ while  (~colidiu && (i*tamos<tempo_max))
          end
     end
     
-    % Atualiza mapa
+    d = norm(escoltado.Pos(1:2)-Pdes);
     
     % PLOT DO GR�FICO "ON LINE"
     tamos_plot = 0.1; %atualizar a cada 100 ms
@@ -94,11 +101,11 @@ end
 
 tempo = tempo(1:i);
 for k = 1:nRobos
-    robo(k) = robo(k).vecCorrecao(i);
+    robo(k) = robo(k).vecCorrecao(i,habilitaDinamica);
 end
 escoltado = escoltado.vecCorrecao(i);
 
 %%%% Salvando os dados no arquivo
-save -mat experimento.mat robo escoltado tempo A Ax Ay Pdes    
+save -mat experimento.mat experimento robo escoltado tempo A Ax Ay Pdes habilitaDinamica   
 
 end

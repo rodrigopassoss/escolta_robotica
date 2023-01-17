@@ -24,11 +24,14 @@ classdef robo_escoltante
         s2 
         angs
         angParaEscoltado  % No sistema de coordenadas do Robô
+        sensorObstaculo
         colidiu
     % Variáveis do Controlador
         X_c % [l_e fi_e th_e]
         constantes_controle
         Ksi_r
+        l_d
+        l_desejado
     % Sinais de Controle
         U    % Contem o sinal de controle da roda esquerda e direita
         Ud   % Sinal de controle desejado
@@ -153,6 +156,17 @@ classdef robo_escoltante
             
             V = p_ei-d*w_i*tan(gamma_ei);
             W = cos(gamma_ei)*(q_ei/d);
+            
+            %%% Modificação da distância
+            Rs = 30;
+            Ra = 100;
+            lobst = min(obj.v_sensor(obj.sensorObstaculo));
+            A = (obj.l_desejado + Rs)/2;
+            B = (obj.l_desejado - Rs)/2;
+            C = (Ra + Rs)/2;
+            k = obj.constantes_controle(3);
+            obj.l_d = A + B*tanh(k*(lobst-C));
+            display(obj.l_d);
              
             obj.Pdes = escoltado.Pos(1:2) + l_d.*[cos(-fi_d+th_e);sin(-fi_d+th_e)];
             obj.Pdes_2 = escoltado.Pos(1:2) + l_ei.*[cos(-fi_ei+th_e);sin(-fi_ei+th_e)];
@@ -284,6 +298,7 @@ classdef robo_escoltante
             pos_sensor(2,:) = pos_sensor(2,:) + obj.Pos(2);
 
             obj.angParaEscoltado = [];
+            obj.sensorObstaculo = [];
             for k=1:length(obj.angs)
                 Vsx = round(linspace(pos_sensor(1,k),obj.s_i(1,k),obj.saturacao));
                 Vsy = round(linspace(pos_sensor(2,k),obj.s_i(2,k),obj.saturacao));
@@ -295,6 +310,9 @@ classdef robo_escoltante
                             obj.s_i(2,k) = Vs(2,j);
                             if A(Vs(2,j),Vs(1,j)) == 100
                                 obj.angParaEscoltado = [obj.angParaEscoltado obj.angs(k)];
+                            end
+                            if A(Vs(2,j),Vs(1,j)) == 0
+                                obj.sensorObstaculo = [obj.sensorObstaculo k];
                             end
                             break;
                         end

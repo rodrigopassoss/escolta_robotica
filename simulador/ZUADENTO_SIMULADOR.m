@@ -87,7 +87,8 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
              break;
          end
     end
-    
+    l_d = min([robo(:).l_d]);
+%     experimento.l_d = [experimento.l_d l_d];
     d = norm(escoltado.Pos(1:2)-Pdes);
     
     % PLOT DO GR�FICO "ON LINE"
@@ -95,9 +96,11 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
     if mod(tempo(i),tamos_plot) == 0
         if habilitaPlot, plot_graficos_online; end
     end 
-    i*tamos
+    i*tamos;
     
 end
+
+
 
 tempo = tempo(1:i);
 for k = 1:nRobos

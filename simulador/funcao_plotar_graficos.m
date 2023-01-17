@@ -148,7 +148,7 @@ else
         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.l_d)
         hold on
         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.l_ei)
-        plot(robo(k).plotInfo.tempos,(robo(k).plotInfo.tempos.^0).*experimento.l_d,'--k')
+%         plot(robo(k).plotInfo.tempos,experimento.l_d(2:end),'--k')
         xlabel('tempo em segundos')
         ylabel('l_{ei}')
         legend('real','estimado','desejado')
@@ -156,7 +156,7 @@ else
         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.fi_d)
         hold on
         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.fi_ei)
-        plot(robo(k).plotInfo.tempos,(robo(k).plotInfo.tempos.^0).*experimento.fi_d(k),'--k')
+%         plot(robo(k).plotInfo.tempos,(robo(k).plotInfo.tempos.^0).*experimento.fi_d(k),'--k')
         xlabel('tempo em segundos')
         ylabel('fi_{ei}')
         legend('real','estimado','desejado')

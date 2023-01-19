@@ -22,10 +22,10 @@ experimento.l_ei = 50*ones(1,nRobos);
 experimento.fi_ei = angConvert(2*pi*[0:nRobos-1]/nRobos);
 experimento.theta_ei = theta_i;
 % constantes do controlador
-k1 = [3.05,2.17,2.1];
-k2 = [0.12,0.099,0.1];
+k1 = [3.05,2.17,2.1,2.1,2.1];
+k2 = [0.12,0.099,0.1,0.1,0.1];
 % Constante para a Modificação da Distância entre os robôs
-k3 = 0.02*ones(1,nRobos);
+k3 = 0.03*ones(1,nRobos);
 
 % Variáveis para a Modificação da Distância entre os robôs
 experimento.l_d = 70; % Distância inicial
@@ -45,7 +45,7 @@ mapabmp = 'mapa02.bmp'; % mapa do ambiente simulado (apenas para a simulação)
 for i = 1:nRobos
     robo(i) = robo_escoltante();
     robo(i).constantes_controle = [k1(i);k2(i);k3(i)];
-    robo(i).ruido = 1; %desvio padrão do ruído do sensor
+    robo(i).ruido = 0; %desvio padrão do ruído do sensor
     robo(i).saturacao = 200; %limite do alcance sensorial em cm
     robo(i).l_desejado = 70;
 end

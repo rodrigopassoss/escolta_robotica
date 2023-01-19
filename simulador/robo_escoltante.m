@@ -166,7 +166,7 @@ classdef robo_escoltante
             C = (Ra + Rs)/2;
             k = obj.constantes_controle(3);
             obj.l_d = A + B*tanh(k*(lobst-C));
-            display(obj.l_d);
+%             display(obj.l_d);
              
             obj.Pdes = escoltado.Pos(1:2) + l_d.*[cos(-fi_d+th_e);sin(-fi_d+th_e)];
             obj.Pdes_2 = escoltado.Pos(1:2) + l_ei.*[cos(-fi_ei+th_e);sin(-fi_ei+th_e)];
@@ -407,7 +407,11 @@ classdef robo_escoltante
             obj.plt.c = plot(obj.Pdes(1),obj.Pdes(2),'.','MarkerEdgeColor',obj.colors(2),'MarkerSize',7);
             obj.plt.d = plot(obj.Pdes_2(1),obj.Pdes_2(2),'.','MarkerEdgeColor',obj.colors(5),'MarkerSize',7);
 
-            obj.plt.e = plot(obj.hPos(1,:),obj.hPos(2,:),obj.colors(3+k));
+            if k<=3
+                obj.plt.e = plot(obj.hPos(1,:),obj.hPos(2,:),obj.colors(3+k));
+            else
+                obj.plt.e = plot(obj.hPos(1,:),obj.hPos(2,:),obj.colors(4));
+            end
 
         end
         

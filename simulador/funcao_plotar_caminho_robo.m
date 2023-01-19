@@ -8,7 +8,11 @@ axis equal
 hold on
 formX = [];formY = [];
 for k = 1:nRobos
-    plot(robo(k).plotInfo.P(1,:),robo(k).plotInfo.P(2,:),robo(k).colors(3+k))
+    if nRobos <= 3
+        plot(robo(k).plotInfo.P(1,:),robo(k).plotInfo.P(2,:),robo(k).colors(3+k));
+    else
+        plot(robo(k).plotInfo.P(1,:),robo(k).plotInfo.P(2,:),'b');        
+    end
     x = robo(k).plotInfo.P(1,end);
     y = robo(k).plotInfo.P(2,end);
     theta = robo(k).plotInfo.P(3,end);

@@ -96,7 +96,7 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
     if mod(tempo(i),tamos_plot) == 0
         if habilitaPlot, plot_graficos_online; end
     end 
-    i*tamos;
+    i*tamos
     
 end
 

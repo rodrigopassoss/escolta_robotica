@@ -92,7 +92,7 @@ classdef robo_escoltado
         
             %%% Controlador Deliberativo com a RRT
             if iteracao == 1
-                passo = 100; rRobo = 40; 
+                passo = 50; rRobo = 45; 
                 sMap = size(obj.Mapa2');
                 [~, path2] = RRT(obj.Mapa,obj.Pdes', obj.Pos', passo, sMap, rRobo) ;
 
@@ -119,10 +119,13 @@ classdef robo_escoltado
                % H = A/(s + A), A = 0.5;
                % H = Y/U => (Y(k+1) - Y)/dt = -AY + AU
                %         =>  Y(k+1) = (1-dtA)Y + dtAU
-               A = 0.98; 
+               A = 0.9; 
+               ordem = 5;
+               for n = 1:ordem
                u = obj.path;
                for k = 2:length(u)
                    obj.path(k,:) = A*u(k,:) + (1-A)*obj.path(k-1,:);
+               end
                end
                obj.path = [obj.path;path2(end,:)]; % Conecta o caminho filtrado ao objetivo;
                obj.e_path = [];

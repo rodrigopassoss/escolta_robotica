@@ -5,7 +5,7 @@ function [A, Path] = RRT(C_obs,q_init, q_goal, passo, sMap, rRobo)
     flag = 1;              % Bandeira para a finalização do algorítmo
     k = 0;
     while (flag)
-        k = k + 1
+        k = k + 1;
        % Gera um posição aleatória 
        q_rand = rand(1,2).*sMap;
        % Obtém o visinho mais próximo

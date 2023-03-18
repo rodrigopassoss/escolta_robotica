@@ -10,7 +10,9 @@ function A = updateMapa2(Mapa,robo,escoltado,nRobos,idx)
     N = length(Bposx);
     A = Mapa;
     for k = 1:N
+       if ((~isnan(Bposx(k)))||(~isnan(Bposy(k))))
         A(Bposy(k),Bposx(k)) = 0;
+       end
     end
     Bposx = []; % Posição x do corpo do robô
     Bposy = []; % Posição y do corpo do robô

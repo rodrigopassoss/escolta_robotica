@@ -19,9 +19,11 @@ for k = 1:nRobos
         plot(Pdes(1),Pdes(2),'.','MarkerEdgeColor','r','MarkerSize',20)
         set(gca,'xtick',[],'ytick',[])        
         xlim([0 size(A,2)])
-        ylim([0 size(A,1)])        
-        formX = [formX robo(k).Pos(1)];     
-        formY = [formY robo(k).Pos(2)]; 
+        ylim([0 size(A,1)])    
+        if ~isempty(find(Robos==k))
+            formX = [formX robo(k).Pos(1)];     
+            formY = [formY robo(k).Pos(2)]; 
+        end
 end
 plot([formX formX(1)],[formY formY(1)],'--b');
 xlabel('x[cm]');

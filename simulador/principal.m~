@@ -22,8 +22,8 @@ experimento.l_ei = 50*ones(1,nRobos);
 experimento.fi_ei = angConvert(2*pi*[0:nRobos-1]/nRobos);
 experimento.theta_ei = theta_i;
 % constantes do controlador
-k1 = [2.17,2.17,2.17,2.17,2.17,2.17];
-k2 = [0.12,0.12,0.12,0.12,0.12,0.12];
+k1 = [2.17,2.17,2.17,2.17,2.17,2.17];00
+k2 = 1.9*[0.12,0.12,0.12,0.12,0.12,0.12];
 % Constante para a Modificação da Distância entre os robôs
 k3 = 0.03*ones(1,nRobos);
 
@@ -55,7 +55,7 @@ escoltado.ruido = 0; %desvio padrão do ruído do sensor
 escoltado.saturacao = 200; %limite do alcance sensorial em cm
 
 %% Parâmetros da simulação
-tempo_max = 50; % tempo máximo do experimento em segundos 
+tempo_max = 40; % tempo máximo do experimento em segundos 
 % tempo_total = tic; % controle de custo computacional (debug apenas)
 %% Habilita Plot
 habilitaPlot = 1;

@@ -13,7 +13,9 @@ function A = updateMapa(Mapa,robo,nRobos)
     N = length(Bposx);
     A = Mapa;
     for k = 1:N
+        if ((~isnan(Bposx(k)))||(~isnan(Bposy(k))))
         A(Bposy(k),Bposx(k)) = 0;
+        end
     end
 end
 

@@ -40,7 +40,7 @@ l_d = experimento.l_d ;
 fi_d = experimento.fi_d;
 % Variaveis para simulacao da falha
 robosComFalhas = []; status=ones(1,nRobos); 
-iteracao_falha = 200;
+iteracao_falha = 450;
 while  (~colidiu && (i*tamos<tempo_max) && d>5)
       % distancia maior que 5 cm ou vlin maior q 5 cm/s ou vrot maior que 0.1 rad/s
     tic     
@@ -60,12 +60,18 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
     x = []; y = []; phi = [];  
     for k = 1:nRobos
                 
-        robo(k) = robo(k).simulacao_sensores(updateMapa2(A,robo,escoltado,nRobos,k));
+        robo(k) = robo(k).simulacao_sensores(updateMapa2(A,robo,escoltado,nRobos,robosComFalhas,k));
 %         lider = 1;
         if i > 1
-%             robo(lider) = robo(lider).TriangToTal(experimento.dados_grupo);
-            l_d = min([robo(:).l_d]);
-            fi_d(Robos) = angConvert(2*pi*[0:length(Robos)-1]/length(Robos));
+            % Definição do setPoint de distância
+            n = length(Robos);
+            l_d = min([robo(:).l_d])*cot(pi/n); l_d_ = min([robo(:).l_d]);
+            Rs = robo(k).Rs; Ra = robo(k).Ra; 
+            l_d = (Rs-l_d)*(l_d<Rs) + (Ra-l_d)*(l_d>Ra) + l_d;
+            Re = sqrt((l_d^2) + (l_d_^2))
+            
+            % Setpoint de ângulo
+            fi_d(Robos) = angConvert(2*pi*[0:n-1]/n);
         end
         
         %%%%%%%%%%%%%%%%%%% CONTROLADOR IN�CIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -119,7 +125,7 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
     
     % simulação de Falha 
     if i==iteracao_falha
-         k = randi(2:nRobos);
+         k = 5 + 0*randi([2 nRobos]);
          robo(k) = robo(k).simulacao_falha();  
     end
  

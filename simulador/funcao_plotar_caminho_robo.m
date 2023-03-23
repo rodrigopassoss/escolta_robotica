@@ -32,11 +32,11 @@ for k = 1:nRobos
     plot(xc3,yc3,'b')
     plot([x x+robo(k).raio*cos(theta)],[y y+robo(k).raio*sin(theta)],'r');
     
-    formX = [formX robo(k).Pos(1)];     
-    formY = [formY robo(k).Pos(2)]; 
+%     formX = [formX robo(k).Pos(1)];     
+%     formY = [formY robo(k).Pos(2)]; 
 
 end
-plot([formX formX(1)],[formY formY(1)],'--b');
+% plot([formX formX(1)],[formY formY(1)],'--b');
 
 plot(escoltado.plotInfo.P(1,:),escoltado.plotInfo.P(2,:),'k')
 x = escoltado.plotInfo.P(1,end);

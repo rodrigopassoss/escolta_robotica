@@ -13,6 +13,8 @@ classdef robo_escoltante
         Wmax  % 6.0724
         ruido  %  1
         saturacao  % 200
+        Rs
+        Ra
     % Informações sensoriais do robô
         Pos 
         hPos
@@ -94,6 +96,9 @@ classdef robo_escoltante
             fi = [1 ; -1]./[obj.ganhoft];
             aux = obj.Modcin*(fi);
             obj.Wmax = aux(2); %cálculo da vellcidade angular máxima a partir do modelo identificado
+            
+            obj.Rs = 30;
+            obj.Ra = 120;
         
             obj.colors = ['c','m','y','b','g','r'];
         end
@@ -393,6 +398,40 @@ classdef robo_escoltante
                 obj.plotInfo.P = obj.plotInfo.P(:,1:iteracao);
                 obj.plotInfo.Pvel_medido = obj.plotInfo.Pvel_medido(:,1:iteracao);
             end
+        end       
+        
+        function [V,W] = desviar_obstaculo(obj,Pdes)
+            %% Controle Reativo - Campos Potênciais
+            ka = 10;
+            grad_Ua = -ka*(obj.Pos(1:2)-Pdes);
+            Ua = norm(grad_Ua)
+
+            kr = 10; 
+            ro_L = obj.raio; [ro,I]=min(obj.v_sensor); 
+            grad_Ur = kr*((1/ro - 1/ro_L)*(1/(ro^3)))*(obj.Pos(1:2)-obj.s2(:,I))*(ro<=ro_L);
+
+            Ur = norm(grad_Ur)
+
+            grad_U = grad_Ua + grad_Ur;
+
+
+
+            %% Norma do vetor gradiente (d)
+            d = norm(grad_U); %dist�ncia at� o destino
+
+            %% angulação do vetor gradiente (theta_e)
+            theta_d = atan2(grad_U(2),grad_U(1)); % �ngulo de destino de -pi a pi
+            theta_e = theta_d - obj.Pos(3);
+
+            % converte theta_e para -pi a pi
+            if theta_e > pi/2, theta_e = pi/2; end
+            if theta_e < -pi/2, theta_e = -pi/2; end
+
+            %% C�culo das velocidades linear (V) e angular (W) do rob� (controle de posi��o final simples)
+            kv = 0.55;
+            V = obj.Vmax*tanh(kv*d)*cos(theta_e);
+            kw = 0.36;
+            W = obj.Wmax*tanh(kw*theta_e);
         end
         
         function obj = simulacao_falha(obj)

@@ -17,6 +17,7 @@ A = imread(mapabmp);
 A = A(:,:,1);
 A = A./(max(max(A)));
 A = A.*255;
+% A = A(end:-1:1,:);
 %A = rgb2gray(A);
 Mapa2 = A;
 escoltado.Mapa2 = Mapa2;
@@ -37,7 +38,9 @@ d = norm(escoltado.Pos(1:2)-Pdes);
 colidiu = 0;
 l_d = experimento.l_d ;
 fi_d = experimento.fi_d;
-robosComFalhas = []; status=ones(nRobos);
+% Variaveis para simulacao da falha
+robosComFalhas = []; status=ones(1,nRobos); 
+iteracao_falha = 450;
 while  (~colidiu && (i*tamos<tempo_max) && d>5)
       % distancia maior que 5 cm ou vlin maior q 5 cm/s ou vrot maior que 0.1 rad/s
     tic     
@@ -52,17 +55,21 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
     if escoltado.colidiu, colidiu = 1; end
     
     % Simulação de parada
-    Robos = setdiff([1:nRobos],robosComFalhas)
+    Robos = setdiff([1:nRobos],robosComFalhas);
     % Simulação dos escoltadores
     x = []; y = []; phi = [];  
-    for k = Robos
+    for k = 1:nRobos
                 
         robo(k) = robo(k).simulacao_sensores(updateMapa2(A,robo,escoltado,nRobos,k));
 %         lider = 1;
         if i > 1
 %             robo(lider) = robo(lider).TriangToTal(experimento.dados_grupo);
-            l_d = min([robo(:).l_d]);
-%             fi_d = 2*pi*[0:nRobos-1]/nRobos;
+            n = length(Robos);
+            l_d = min([robo(:).l_d])*cot(pi/n); l_d_ = min([robo(:).l_d]);
+            Rs = robo(k).Rs; Ra = robo(k).Ra; 
+            l_d = (Rs-l_d)*(l_d<Rs) + (Ra-l_d)*(l_d>Ra) + l_d;
+            Re = sqrt((l_d^2) + (l_d_^2))
+            fi_d(Robos) = angConvert(2*pi*[0:n-1]/n);
         end
         
         %%%%%%%%%%%%%%%%%%% CONTROLADOR IN�CIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -86,7 +93,7 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
                     [pos,phi_] = robo(k).envia_pacote(escoltado);
                     x = [x pos(1)]; y = [y pos(2)]; phi = [phi phi_];
                 end
-                status(k) = robo(k).falhou;
+                status(k) = ~robo(k).falhou;
 
         end
 
@@ -115,8 +122,8 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
     robosComFalhas = find(status==0);
     
     % simulação de Falha 
-    if i==100
-         k = randi(nRobos);
+    if i==iteracao_falha
+         k = randi(2:nRobos);
          robo(k) = robo(k).simulacao_falha();  
     end
  

@@ -18,6 +18,15 @@ function A = updateMapa2(Mapa,robo,escoltado,nRobos,robosComFalhas,idx)
            end
        end
     end
+    for k = setdiff([1:nRobos],robosComFalhas)
+       I = find(setdiff(vec,idx)==k);
+       N = length(Bposx(I,:));
+       for l = 1:N
+           if ((~isnan(Bposx(I,l)))||(~isnan(Bposy(I,l))))
+            A(Bposy(I,l),Bposx(I,l)) = 50;
+           end
+       end
+    end
     Bposx = []; % Posição x do corpo do robô
     Bposy = []; % Posição y do corpo do robô
     Bposx = [Bposx round(escoltado.Pos(1) + escoltado.raio*cos(2*pi*[0:99]/100))];

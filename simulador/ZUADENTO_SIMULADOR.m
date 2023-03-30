@@ -36,7 +36,7 @@ i = 0;  % contador
 
 d = norm(escoltado.Pos(1:2)-Pdes);
 colidiu = 0;
-l_d = experimento.l_d ;
+l_d = experimento.l_d;
 fi_d = experimento.fi_d;
 % Variaveis para simulacao da falha
 robosComFalhas = []; status=ones(1,nRobos); 
@@ -62,17 +62,16 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
                 
         robo(k) = robo(k).simulacao_sensores(updateMapa2(A,robo,escoltado,nRobos,robosComFalhas,k));
 %         lider = 1;
-        if i > 1
-            % Definição do setPoint de distância
-            n = length(Robos);
-            l_d = min([robo(:).l_d])*cot(pi/n); l_d_ = min([robo(:).l_d]);
-            Rs = robo(k).Rs; Ra = robo(k).Ra; 
-            l_d = (Rs-l_d)*(l_d<Rs) + (Ra-l_d)*(l_d>Ra) + l_d;
-            Re = sqrt((l_d^2) + (l_d_^2))
-            
-            % Setpoint de ângulo
-            fi_d(Robos) = angConvert(2*pi*[0:n-1]/n);
-        end
+        % Definição do setPoint de distância
+        n = length(Robos);
+        [l_d,robo_] = min([robo(:).l_d]);  % Raio de Proteção        
+        robo(k).constantes_controle(4) = cot(pi/n);
+        
+        Re = sqrt(min(robo(robo_).v_sensor(robo(robo_).sensorObstaculo))^2 - (l_d*sin(pi/n))^2) + l_d*cos(pi/n);
+
+        % Setpoint de ângulo
+        fi_d(Robos) = angConvert(2*pi*[0:n-1]/n);
+        
         
         %%%%%%%%%%%%%%%%%%% CONTROLADOR IN�CIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %s_i = sensores no sistema de coordenadas do ambiente
@@ -125,7 +124,7 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
     
     % simulação de Falha 
     if i==iteracao_falha
-         k = 5 + 0*randi([2 nRobos]);
+         k = randi([2 nRobos]);
          robo(k) = robo(k).simulacao_falha();  
     end
  
@@ -137,7 +136,7 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
     if mod(tempo(i),tamos_plot) == 0
         if habilitaPlot, plot_graficos_online; end
     end 
-    i*tamos;
+    i*tamos
     
 end
 
@@ -150,6 +149,6 @@ end
 escoltado = escoltado.vecCorrecao(i);
 
 %%%% Salvando os dados no arquivo
-save -mat experimento.mat experimento robo escoltado tempo A Ax Ay Pdes habilitaDinamica   
+save -mat experimento.mat experimento robo escoltado tempo A Ax Ay Pdes habilitaDinamica robosComFalhas  
 
 end

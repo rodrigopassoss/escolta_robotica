@@ -24,6 +24,11 @@ for k = 1:nRobos
             formX = [formX robo(k).Pos(1)];     
             formY = [formY robo(k).Pos(2)]; 
         end
+        v = robo(k).Ksi_r(1);
+        w = robo(k).Ksi_r(3);
+        dx = v*cos(robo(k).Pos(3)) - robo(k).L*w*sin(robo(k).Pos(3));
+        dy = v*sin(robo(k).Pos(3)) + robo(k).L*w*cos(robo(k).Pos(3));
+        quiver(robo(k).Pos(1),robo(k).Pos(2),dx,dy,'r','linewidth',2);
 end
 plot([formX formX(1)],[formY formY(1)],'--b');
 xlabel('x[cm]');

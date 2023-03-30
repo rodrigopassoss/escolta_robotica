@@ -27,13 +27,16 @@
 %             gamma_ei = fi_ei + obj.X_c(3);             
 
             
-            k1 = obj.constantes_controle(1);k2 = obj.constantes_controle(2);
-            p_ei = (k1*tanh(l_d-l_ei)+v_e*cos(fi_ei))*sec(gamma_ei); 
+            k1 = obj.constantes_controle(1); k2 = obj.constantes_controle(2);
+%             p_ei = (k1*tanh(l_d-l_ei)+v_e*cos(fi_ei))*sec(gamma_ei); 
             ang_err =  mod(fi_d - fi_ei + pi, 2*pi) -pi;
-            q_ei = (k2*l_ei*tanh(ang_err)-v_e*sin(fi_ei)+l_ei*w_e+p_ei*sin(gamma_ei));
             
-            V = p_ei-d*w_i*tan(gamma_ei);
+            p_ei = (k1*(l_d-l_ei)+v_e*cos(fi_ei))*sec(gamma_ei); 
+%             q_ei = (k2*l_ei*tanh(ang_err)-v_e*sin(fi_ei)+l_ei*w_e+p_ei*sin(gamma_ei));
+            q_ei = (k2*l_ei*(ang_err)-v_e*sin(fi_ei)+l_ei*w_e+p_ei*sin(gamma_ei));            
+            
             W = cos(gamma_ei)*(q_ei/d);
+            V = p_ei-d*W*tan(gamma_ei);
             
             %%% Modificação da distância
             Rs = obj.Rs;
@@ -44,33 +47,37 @@
                 lobst = obj.v_sensor(1);
             end
                 
-            A = (obj.l_desejado + Rs)/2;
-            B = (obj.l_desejado - Rs)/2;
+            Rs = obj.Rs; Ra = obj.Ra; Rd = obj.l_desejado;
+            A = (Rd + Rs)/2;
+            B = (Rd - Rs)/2;
             C = (Ra + Rs)/2;
             k = obj.constantes_controle(3);
-            obj.l_d = A + B*tanh(k*(lobst-C));
-            
+            alpha = obj.constantes_controle(4);
+            obj.l_d = A + B*tanh(k*(alpha*lobst-C));
+                        
             ang1 = fi_d+th_e;
             obj.Pdes = Pe(1:2) + l_d.*[cos(ang1);sin(ang1)];
             ang2 = fi_ei+th_e;
             obj.Pdes_2 = Pe(1:2) + l_ei.*[cos(ang2);sin(ang2)];
+            
+            % Controle de desvio de obstáculo
+            if lobst < (obj.Rs-2*obj.raio)
+                [V,W] = obj.desviar_obstaculo(obj.Pdes);
+                display('desviar de obstáculo');
+            end
 
             %%% Velocidade Linear e Angular
             Vmax = obj.Vmax; %m�ximo � aproximadamente 34 cm/s
             Wmax = obj.Wmax; %m�ximo � aproximadamente 6 rad/s
             %% Saturação Velocidade Linear e Angular
-            if abs(V) > obj.Vmax
-                V = sign(V)*obj.Vmax;
+            if abs(V) > Vmax
+                V = sign(V)*Vmax;
             end
-            if abs(W) > obj.Wmax
-                W = sign(W)*obj.Wmax;
+            if abs(W) > Wmax
+                W = sign(W)*Wmax;
             end  
-            
-            % Controle de desvio de obstáculo
-            d = min(obj.v_sensor);
-            if d < obj.raio 
-                [V,W] = obj.desviar_obstaculo(obj.Pdes);
-            end
+%             V = Vmax*tanh(V/Vmax);
+%             W = Wmax*tanh(W/Wmax);
             
             %%% Para o caso de usar apenas o modelo cinemático
             obj.Ksi_r = [V ; 0 ; W];

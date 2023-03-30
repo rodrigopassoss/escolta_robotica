@@ -4,7 +4,7 @@ load(arquivo);
 
 if habilitaDinamica
     legenda=[];
-    for k = 1:nRobos
+    for k = setdiff(1:nRobos,robosComFalhas)
         g = figure(30+k);
         set(g,'name',['Evolução no tempo das velocidades linear e angular do robô ',num2str(k)]);
         subplot(211)
@@ -112,7 +112,7 @@ if habilitaDinamica
 else
     
     legenda = [];
-    for k = 1:nRobos
+    for k = setdiff(1:nRobos,robosComFalhas)
         g = figure(30+k);
         set(g,'name',['Evolução no tempo das velocidades linear e angular do robô ',num2str(k)]);
         subplot(211)

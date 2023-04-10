@@ -100,7 +100,7 @@ classdef robo_escoltante
             
             obj.Rs = 30;
             obj.Ra = 120;
-        
+            
             obj.colors = ['c','m','y','b','g','r'];
         end
         
@@ -405,45 +405,43 @@ classdef robo_escoltante
             end
         end       
         
-        function [V,W] = desviar_obstaculo(obj,Pdes)
+        function [V,W] = desviar_obstaculo(obj,dmax)
+            %% Controle Reativo - Forças Virtuais
+
+            s = 2;b = 0.0051;
+            % Sensor do Lado esquerdo
+            [dL, I] = min(obj.v_sensor(obj.angs<=pi));
+            alphaL = obj.angs(I);
+            c = (dmax > dL);
+            Fl = c*b*(dmax - dL).^s;
+             
+            % Sensor do Lado direito
+            [dR, I] = min(obj.v_sensor(obj.angs>pi));
+            alphaR = obj.angs(I);
+            c = (dmax > dR);
+            Fr = c*b*(dmax - dR).^s;
+            
+            % Admitância mecânica considerando apenas a constante elástica
+            Y = obj.Wmax;
+            
+            W = Y*(Fr-Fl);
+            V = Y*(Fr*sin(alphaR)+Fl*sin(alphaL));
+
+        end
+        
+        function [V,W] = desviar_obstaculo2(obj,Pdes)
             %% Controle Reativo - Campos Potênciais
             ka = 1;
             grad_Ua = -ka*(obj.Pos(1:2)-Pdes);
-            Ua = norm(grad_Ua)           
             
-%             grad_Ua = grad_Ua/Ua;
 
             kr = 1e3; 
             ro_L = (obj.Rs-obj.raio); [ro,I]=min(obj.v_sensor);
             grad_Ur = kr*((1/ro - 1/ro_L)*(1/(ro^3)))*(obj.Pos(1:2)-obj.s2(:,I))*(ro<=ro_L);
-%             kr2 = 1e1;
-%             ro_L = (obj.Rs-obj.raio); [ro,I]=min(obj.v_sensor(obj.sensorEscoltado));
-%             if length(I)~=0
-%                 grad_Ur2 = kr2*((1/ro - 1/ro_L)*(1/(ro^3)))*(obj.Pos(1:2)-obj.s2(:,obj.sensorEscoltado(I)))*(ro<=ro_L);
-%             else
-%                 grad_Ur2 = [0;0];
-%             end
-%             kr3 = 1e1;
-%             ro_L = (obj.Rs-obj.raio); [ro,I]=min(obj.v_sensor(obj.sensorRobos));
-%             if length(I)~=0
-%                 grad_Ur3 = kr3*((1/ro - 1/ro_L)*(1/(ro^3)))*(obj.Pos(1:2)-obj.s2(:,obj.sensorRobos(I)))*(ro<=ro_L);
-%             else
-%                 grad_Ur3 = [0;0];
-%             end
-%             Ur = norm(grad_Ur);
-%             grad_Ur = grad_Ur/Ur;
-%             Ur = norm(grad_Ur);
+
             
             grad_U = grad_Ua + grad_Ur; % + grad_Ur2 + grad_Ur3;
-%             U = norm(grad_U);
-%             
-%             k = sqrt((obj.L*obj.Wmax)^2 + obj.Vmax^2);
-%             if Ua < k, k = Ua; end
-%             
-%             grad_U = k*(grad_U/U);
 
-%             V = grad_U(1)*cos(obj.Pos(3)) + grad_U(2)*sin(obj.Pos(3));
-%             W = (-grad_U(1)*sin(obj.Pos(3)) + grad_U(2)*cos(obj.Pos(3)))/obj.L;
 
             %% Norma do vetor gradiente (d)
             d = norm(grad_U); %dist�ncia at� o destino
@@ -457,10 +455,11 @@ classdef robo_escoltante
 %             if theta_e < -pi/2, theta_e = -pi/2; end
 
             %% C�culo das velocidades linear (V) e angular (W) do rob� (controle de posi��o final simples)
-            kv = 0.55;
-            V = obj.Vmax*tanh(kv*d)*cos(theta_e);
-            kw = 0.36;
-            W = obj.Wmax*tanh(kw*theta_e);
+            Vmax = obj.Vmax; Wmax = obj.Wmax;
+            kv = 0.03;
+            V = Vmax*tanh(kv*d)*cos(theta_e);
+            kw = 0.6;
+            W = Wmax*tanh(kw*theta_e);
         end
         
         function obj = simulacao_falha(obj)

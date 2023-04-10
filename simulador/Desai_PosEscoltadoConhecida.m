@@ -61,10 +61,14 @@
             obj.Pdes_2 = Pe(1:2) + l_ei.*[cos(ang2);sin(ang2)];
             
             % Controle de desvio de obstáculo
-            if lobst < (obj.Rs-2*obj.raio)
-                [V,W] = obj.desviar_obstaculo(obj.Pdes);
+            dmax = (obj.Rs-obj.raio);
+            if lobst < dmax
+                [Vc,Wc] = obj.desviar_obstaculo(dmax);
+                V = V + Vc;
+                W = W + Wc;
                 display('desviar de obstáculo');
             end
+            
 
             %%% Velocidade Linear e Angular
             Vmax = obj.Vmax; %m�ximo � aproximadamente 34 cm/s

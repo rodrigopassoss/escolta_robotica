@@ -124,7 +124,7 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
     
     % simulação de Falha 
     if i==iteracao_falha
-         k = randi([2 nRobos]);
+         k = 5 + 0*randi([2 nRobos]);
          robo(k) = robo(k).simulacao_falha();  
     end
  

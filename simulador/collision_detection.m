@@ -1,7 +1,7 @@
-% verifica se √© permitido conectar 2 n√≥s
+% verifica se È permitido conectar 2 nÛs
 function [r] = collision_detection(obst,p2,p1,raio_robo)
-    % Verifica se a liga√ß√£o cruza com o obst√°culos
-    % Isso √© feito usando o produto vetorial 
+    % Verifica se a ligaÁ„o cruza com o obst·culos
+    % Isso È feito usando o produto vetorial 
     if length(obst)~=0
         vet = p2 - p1;
         tam = norm(vet);

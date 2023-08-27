@@ -1,7 +1,7 @@
 function A = updateMapa(Mapa,robo,nRobos)
     %updateMapa Summary of this function goes here
-    Bposx = []; % PosiÃ§Ã£o x do corpo do robÃ´
-    Bposy = []; % PosiÃ§Ã£o y do corpo do robÃ´
+    Bposx = []; % Posição x do corpo do robô
+    Bposy = []; % Posição y do corpo do robô
     for k = 1:nRobos
         Bposx = [Bposx round(robo(k).Pos(1) + robo(k).raio*cos(2*pi*[0:99]/100))];
         Bposy = [Bposy round(robo(k).Pos(2) + robo(k).raio*sin(2*pi*[0:99]/100))];
@@ -18,4 +18,3 @@ function A = updateMapa(Mapa,robo,nRobos)
         end
     end
 end
-

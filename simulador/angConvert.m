@@ -1,5 +1,5 @@
 function [angs2] = angConvert(angs)
-%angConvert faz com que o Ã¢ngulo fique de -pi Ã  pi
+%angConvert faz com que o ângulo fique de -pi à pi
 %   Detailed explanation goes here
    for i = 1:length(angs)
         if angs(i) > pi
@@ -12,4 +12,3 @@ function [angs2] = angConvert(angs)
    end
    
 end
-

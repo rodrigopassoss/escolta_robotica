@@ -5,12 +5,12 @@ function [V,W] = seguidor_obstaculo(v_sensor)
     ys_e = 0.5*(v_sensor(90/N - 2)) + (v_sensor(90/N + 2));         % Lado esquerdo
     ys_d = 0.5*(v_sensor(270/N - 2)) + (v_sensor(270/N + 2));       % Lado direito
 
-    %%%% Estima√ß√£o das vari√°veis de estado
+    %%%% EstimaÁ„o das vari·veis de estado
     % Offset
     d_wall = 30; 
     [d_,I]=min([ys_e;ys_d]); 
-    if   I==1, d_ = d_wall - d_;       % Mais pr√≥ximo pelo lado esquerdo
-    else       d_ = d_ - d_wall; end   % Mais pr√≥ximo pelo lado direito
+    if   I==1, d_ = d_wall - d_;       % Mais prÛximo pelo lado esquerdo
+    else       d_ = d_ - d_wall; end   % Mais prÛximo pelo lado direito
 
 
     % erro angular
@@ -35,7 +35,7 @@ function [V,W] = seguidor_obstaculo(v_sensor)
         if I== 1, fi=pi/2; end
         if I== 2, fi=-pi/2; end
     end
-    %% C√°culo das velocidades linear (V) e angular (W) do rob√¥ (Para o seguidor de Parede)
+    %% C·culo das velocidades linear (V) e angular (W) do robÙ (Para o seguidor de Parede)
     k = 0.2; 
     v_c = min([v_d, k*abs(d_)]);
     V = (v_d - v_c)*abs(cos((1-k)*fi));

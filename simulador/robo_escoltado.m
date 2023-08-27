@@ -1,22 +1,24 @@
 classdef robo_escoltado
-    % robo classe que representa o robÃ´
+    % robo classe que representa o robô
     
     properties
-    % CaracterÃ­sticas fÃ­sicas do robÃ´    
+    % Características físicas do robô    
         r  % 5.3000
         L  % 5.6250
-        Modelo  % [2Ã—2 ss]
+        Modelo  % [2×2 ss]
         raio  % 8
-        Modcin  % [2Ã—2 double]
-        ganhoft  % [2Ã—1 double]
+        Modcin  % [2×2 double]
+        ganhoft  % [2×1 double]
         Vmax  % 34.1570
         Wmax  % 6.0724
         ruido  %  1
         saturacao  % 200
-    % InformaÃ§Ãµes sobre o mapa
+    % Raio de Segurança
+        Rs
+    % Informações sobre o mapa
         Mapa
         Mapa2
-    % InformaÃ§Ãµes da tarefa do robÃ´
+    % Informações da tarefa do robô
         Pos 
         hPos
         Pdes
@@ -31,23 +33,23 @@ classdef robo_escoltado
     % Sinais de Controle
         U    % Contem o sinal de controle da roda esquerda e direita
         Ud   % Sinal de controle desejado
-        X    % estado dinÃ¢mico do sistema
-    % InformaÃ§Ãµes para o plot
+        X    % estado dinâmico do sistema
+    % Informações para o plot
         plotInfo
         plt
     end
     
     methods
         function obj = robo_escoltado()
-            %%% ParÃ¢metros de configuraÃ§Ã£o das caracterÃ­sticas do robÃ´.
-            % Wd/FId = A/(s+B); %velocidade angula na saÃ­da em rad/s
+            %%% Parâmetros de configuração das características do robô.
+            % Wd/FId = A/(s+B); %velocidade angula na saída em rad/s
             %    -15.66
             %   --------
             %   s + 4.87
             %    -15.11
             %   ---------
             %   s + 5.014
-            % We/FIe = C/(s+D); %velocidade angula na saÃ­da em rad/s
+            % We/FIe = C/(s+D); %velocidade angula na saída em rad/s
             %    17.75
             %   ---------
             %   s + 5.833
@@ -55,7 +57,7 @@ classdef robo_escoltado
             %   ---------
             %   s + 4.286
             obj.r = 5.3; %raio da roda
-            obj.L = 11.25/2; %distÃ¢ncia da roda ao centro do robÃ´ (metade da distancia entre as rodas)
+            obj.L = 11.25/2; %distância da roda ao centro do robô (metade da distancia entre as rodas)
             k_w_to_fi = 2*obj.L/obj.r;
             A = 15.11;
             A_ = A*k_w_to_fi;
@@ -72,19 +74,20 @@ classdef robo_escoltado
 
             % U = [U_d ; U_e] entradas de -1 a 1
             % X = [FI_d ; FI_e] estado
-            % Y = [V ; W] saÃ­das
+            % Y = [V ; W] saídas
+            obj.Rs = 30;
 
-            obj.raio = 8; %raio do robÃ´ para verificar colisÃ£o e plotar o robÃ´ [cm]
-            obj.Modcin = Mc; %modelo cinemÃ¡tico direto
+            obj.raio = 8; %raio do robô para verificar colisão e plotar o robô [cm]
+            obj.Modcin = Mc; %modelo cinemático direto
             obj.ganhoft = [B/A_ ; D/C_];
             % U = inv(obj.Modcin)*[V ; W];
 
             fi = [1 ; 1]./[obj.ganhoft];
             aux = obj.Modcin*(fi);
-            obj.Vmax = aux(1); %cÃ¡lculo da vellcidade linear mÃ¡xima a partir do modelo identificado
+            obj.Vmax = aux(1); %cálculo da vellcidade linear máxima a partir do modelo identificado
             fi = [1 ; -1]./[obj.ganhoft];
             aux = obj.Modcin*(fi);
-            obj.Wmax = aux(2); %cÃ¡lculo da vellcidade angular mÃ¡xima a partir do modelo identificado
+            obj.Wmax = aux(2); %cálculo da vellcidade angular máxima a partir do modelo identificado
         
         end
         
@@ -96,8 +99,8 @@ classdef robo_escoltado
                 sMap = size(obj.Mapa2');
                 [~, path2] = RRT(obj.Mapa,obj.Pdes', obj.Pos', passo, sMap, rRobo) ;
 
-            %%%%%% SuavizaÃ§Ã£o do caminho
-               %%% Etapa 01: EliminaÃ§Ã£o de redundÃ¢ncias do caminho
+            %%%%%% Suavização do caminho
+               %%% Etapa 01: Eliminação de redundâncias do caminho
                Nn = length(path2(:,1));
                for k = 1:Nn-1
                     if k > Nn, break; end
@@ -109,7 +112,7 @@ classdef robo_escoltado
                     end
                     Nn = length(path2(:,1));   % Atualiza o tamanho do caminho
                end
-               %%% Etapa 02: InterpolaÃ§Ã£o do Caminho:
+               %%% Etapa 02: Interpolação do Caminho:
                obj.path = [];
                for k = 1:Nn-1
                    d = passo/norm(path2(k+1,:)-path2(k,:)); B = [0:d:1;0:d:1]'; 
@@ -130,39 +133,39 @@ classdef robo_escoltado
                obj.path = [obj.path;path2(end,:)]; % Conecta o caminho filtrado ao objetivo;
                obj.e_path = [];
             end
-            %%%%%% Seguidor de trajetÃ³ria
+            %%%%%% Seguidor de trajetória
             [~, I] = min(((obj.path(:,1)-obj.Pos(1)).^2 + (obj.path(:,2)-obj.Pos(2)).^2).^0.5);
             passo = 1;
             if I >= (length(obj.path)-passo), I = length(obj.path)-passo; end
             p_des = obj.path(I+passo,1:2);
 
             %%% Norma do vetor gradiente (d)
-            d = norm(p_des-obj.Pos(1:2)); %distï¿½ncia atï¿½ o destino
+            d = norm(p_des-obj.Pos(1:2)); %dist?ncia at? o destino
             obj.e_path = [obj.e_path obj.Pos(1:2)];
-            %%% angulaÃ§Ã£o do vetor gradiente (theta_e)
-            theta_d = atan2(p_des(2)-obj.Pos(2),p_des(1)-obj.Pos(1)); % ï¿½ngulo de destino de -pi a pi
+            %%% angulação do vetor gradiente (theta_e)
+            theta_d = atan2(p_des(2)-obj.Pos(2),p_des(1)-obj.Pos(1)); % ?ngulo de destino de -pi a pi
             theta_e = theta_d - obj.Pos(3);
 
             % converte theta_e para -pi a pi
             if theta_e > pi, theta_e = theta_e - 2*pi; end
             if theta_e < -pi, theta_e = theta_e + 2*pi; end
-            wmax = 5;kw = 0.55;
+            wmax = 5;kw = 0.55; %5
             W = wmax*tanh(kw*theta_e);
             % converte theta_e para -pi/2 a pi/2
             if theta_e > pi/2, theta_e = pi/2; end
             if theta_e < -pi/2, theta_e = -pi/2; end
-            vmax = 20;kv = 2.5;
+            vmax = 15;kv = 2.5; %20
             V = vmax*cos(theta_e);
 
             if norm(obj.Pos(1:2)-obj.Pdes)<3, V = 0; W = 0; end
 
             
-            %%% saÃ­da da funÃ§Ã£o de controle deve ser U = [U_d ; U_e] entrada
+            %%% saída da função de controle deve ser U = [U_d ; U_e] entrada
             FI = obj.Modcin\[V ; W]; %FI = [FI_d ; FI_e];
             obj.U = [obj.ganhoft].*FI;
             
             obj.Ud = obj.U;
-            % SaturaÃ§Ã£o do sinal de controle
+            % Saturação do sinal de controle
             if abs(obj.U(1)) > 1
                 obj.U(1) = sign(obj.U(1));
             end
@@ -184,11 +187,11 @@ classdef robo_escoltado
         end
         
         function obj = simulacao(obj,tamos,iteracao)
-                R = [cos(obj.Pos(3)) sin(obj.Pos(3)) 0 ; -sin(obj.Pos(3)) cos(obj.Pos(3)) 0 ; 0 0 1]; % matriz de rotaï¿½ï¿½o
-                [Ksir_real, X] = dinamica_zuadento(obj,tamos); %retorna as velocidades V e W reais no SC do robï¿½
+                R = [cos(obj.Pos(3)) sin(obj.Pos(3)) 0 ; -sin(obj.Pos(3)) cos(obj.Pos(3)) 0 ; 0 0 1]; % matriz de rota??o
+                [Ksir_real, X] = dinamica_zuadento(obj,tamos); %retorna as velocidades V e W reais no SC do rob?
                 obj.X = X;
                 Ksi_I = R\Ksir_real; % coloca as velocidades V e W reais no SC do ambiente
-                obj.Pos = obj.Pos + Ksi_I*tamos; % atualizaï¿½ï¿½o da posiï¿½ï¿½o do robï¿½ (integraï¿½ï¿½o no SC do ambiente)
+                obj.Pos = obj.Pos + Ksi_I*tamos; % atualiza??o da posi??o do rob? (integra??o no SC do ambiente)
                 obj.hPos(:,1:end-1) = obj.hPos(:,2:end);
                 obj.hPos(:,end) = obj.Pos;
                 % converte theta para -pi a pi
@@ -204,9 +207,9 @@ classdef robo_escoltado
                 Ksir_d = obj.Modcin*(fi); % converte para comandos de velocidade (apenas para registro e plots futuros)
 
                 
-                obj.plotInfo.Pvel(:,iteracao+1) = Ksir_d; % atualiza o vetor das velocidades (comandos) do robï¿½ durante o experimento.
-                obj.plotInfo.Pvel_medido(:,iteracao+1) = [Vmedido ; Wmedido]; % atualiza o vetor das velocidades reais do robï¿½ durante o experimento.
-                obj.plotInfo.P(:,iteracao+1) = obj.Pos; % atualiza o vetor das posiï¿½ï¿½es do robï¿½ durante o experimento (SC do ambiente).
+                obj.plotInfo.Pvel(:,iteracao+1) = Ksir_d; % atualiza o vetor das velocidades (comandos) do rob? durante o experimento.
+                obj.plotInfo.Pvel_medido(:,iteracao+1) = [Vmedido ; Wmedido]; % atualiza o vetor das velocidades reais do rob? durante o experimento.
+                obj.plotInfo.P(:,iteracao+1) = obj.Pos; % atualiza o vetor das posi??es do rob? durante o experimento (SC do ambiente).
                 obj.plotInfo.Pu(:,iteracao+1) = obj.Ud; % U = [U_d ; U_e] de -1 a 1 % valor desejado
                 obj.plotInfo.Pu_real(:,iteracao+1) = Ureal; % U = [U_d ; U_e] de -1 a 1 % valor real
                 obj.plotInfo.Pfi(:,iteracao+1) = fi; % U = [Fi_d ; Fi_e] % valor desejado de fi
@@ -216,16 +219,16 @@ classdef robo_escoltado
         
         function obj = simulacao_sensores(obj,A)
            
-            %%% tratamento dos sensores (antiga funÃ§Ã£o inicio)
+            %%% tratamento dos sensores (antiga função inicio)
             Ps_i = obj.s_i;
             [ymaxA , xmaxA] = size(A);
             smax = obj.saturacao*(ones(1,length(obj.angs)));
             smax = smax + obj.raio;
-            %s Ã© um vetor cujos elementos representam o ponto da leitura mÃ¡xima (a priori) para
-            %cada um dos sensores no sistema de coordenadas do robÃ´
-            obj.s = [smax.*cos(obj.angs) ; smax.*sin(obj.angs)]; % vetor no SC do robÃ´ (ainda saturado)    
-            Ri = [cos(obj.Pos(3)) -sin(obj.Pos(3)); sin(obj.Pos(3)) cos(obj.Pos(3))]; % matriz de rotaÃ§Ã£o
-            %s_i Ã© o vetor s colocado no sistema de coordenadas do ambiente (sem ruÃ­do) (ainda saturado)
+            %s é um vetor cujos elementos representam o ponto da leitura máxima (a priori) para
+            %cada um dos sensores no sistema de coordenadas do robô
+            obj.s = [smax.*cos(obj.angs) ; smax.*sin(obj.angs)]; % vetor no SC do robô (ainda saturado)    
+            Ri = [cos(obj.Pos(3)) -sin(obj.Pos(3)); sin(obj.Pos(3)) cos(obj.Pos(3))]; % matriz de rotação
+            %s_i é o vetor s colocado no sistema de coordenadas do ambiente (sem ruído) (ainda saturado)
             obj.s_i = Ri*obj.s;
             obj.s_i(1,:) = obj.s_i(1,:) + obj.Pos(1);
             obj.s_i(2,:) = obj.s_i(2,:) + obj.Pos(2);
@@ -249,25 +252,25 @@ classdef robo_escoltado
                     end
                 end
             end
-            %retorna a mediÃ§Ã£o para o sistema de coordenadas do robÃ´
-            % O ROBÃ” Ã‰ ORIENTADO PARA O EIXO X.
+            %retorna a medição para o sistema de coordenadas do robô
+            % O ROBÔ É ORIENTADO PARA O EIXO X.
             Ps_i(1,:) = obj.s_i(1,:) - obj.Pos(1);
             Ps_i(2,:) = obj.s_i(2,:) - obj.Pos(2);
             obj.s = Ri\Ps_i;
-            %adiciona ruÃ­do na mediÃ§Ã£o (a resoluÃ§Ã£o da mediÃ§Ã£o depende da resoluÃ§Ã£o do
+            %adiciona ruído na medição (a resolução da medição depende da resolução do
             %mapa)
             obj.s = obj.s + obj.ruido*randn(2,length(obj.angs));
-            % sensor com ruido de mediÃ§Ã£o no S.C. do ambiente
+            % sensor com ruido de medição no S.C. do ambiente
             aux = Ri*obj.s;
             obj.s2(1,:) = aux(1,:) + obj.Pos(1);
             obj.s2(2,:) = aux(2,:) + obj.Pos(2);
 
-            % tratamento dos sensores (antiga funÃ§Ã£o FIM)
+            % tratamento dos sensores (antiga função FIM)
 
             obj.v_sensor = sqrt( (obj.s2(1,:)-pos_sensor(1,:)).^2 + (obj.s2(2,:)-pos_sensor(2,:)).^2 ); 
-            v_colidiu = sqrt( (obj.s_i(1,:)-pos_sensor(1,:)).^2 + (obj.s_i(2,:)-pos_sensor(2,:)).^2 ); % distÃ¢ncia real entre o robÃ´ e os obstaculos
-            ds0 = sort(v_colidiu);  % ds0 Ã© a distÃ¢ncia do sensor sem ruÃ­do com a menor leitura
-            if ds0(1) <= 1 %colisÃ£o de pior caso com 
+            v_colidiu = sqrt( (obj.s_i(1,:)-pos_sensor(1,:)).^2 + (obj.s_i(2,:)-pos_sensor(2,:)).^2 ); % distância real entre o robô e os obstaculos
+            ds0 = sort(v_colidiu);  % ds0 é a distância do sensor sem ruído com a menor leitura
+            if ds0(1) <= 1 %colisão de pior caso com 
                 obj.colidiu = 1;
             end
             
@@ -275,13 +278,13 @@ classdef robo_escoltado
         
         function obj = configuracao_inicial(obj,experimento,tempo_max)     
             
-            obj.colidiu = 0; % verifica se o robï¿½ colidiu para finalizar a simulaï¿½ï¿½o
-            tamos = experimento.tamos; % tempo de amostragem da simulaï¿½ï¿½o em segundos
-            % inicializaï¿½ï¿½o da posiï¿½ï¿½o do robï¿½
+            obj.colidiu = 0; % verifica se o rob? colidiu para finalizar a simula??o
+            tamos = experimento.tamos; % tempo de amostragem da simula??o em segundos
+            % inicializa??o da posi??o do rob?
             x = experimento.rbx(end);
             y = experimento.rby(end);
             theta = experimento.ang(end)*pi/180; % inicia orientado para o eixo x do plano
-            obj.Pos = [x ; y ; theta]; % ï¿½ a posiï¿½ï¿½o atual do robï¿½ (aqui ï¿½ a posiï¿½ï¿½o inicial).
+            obj.Pos = [x ; y ; theta]; % ? a posi??o atual do rob? (aqui ? a posi??o inicial).
             obj.hPos = ones(3,500).*obj.Pos;
             
             % vetores sobre o experimento
@@ -293,29 +296,29 @@ classdef robo_escoltado
             obj.plotInfo.Pu_real = zeros(2,round(tempo_max/tamos)-1);
             obj.plotInfo.Pfi = zeros(2,round(tempo_max/tamos)-1);
             obj.plotInfo.Pfi_real = zeros(2,round(tempo_max/tamos)-1);
-            obj.X = [0 ; 0]; % estado do sistema para simulaï¿½ï¿½o dinï¿½mica
+            obj.X = [0 ; 0]; % estado do sistema para simula??o din?mica
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % ï¿½NGULOS NO SISTEMA DE COORDENADAS DO ROBï¿½! -> 0 graus ï¿½ o eixo X (eixo de movimentaï¿½ï¿½o)
+            % ?NGULOS NO SISTEMA DE COORDENADAS DO ROB?! -> 0 graus ? o eixo X (eixo de movimenta??o)
             resang = 5;
             obj.angs = [0:resang:360-resang]*pi/180;
 
-            % inicializaï¿½ï¿½o dos sensores com zero;
+            % inicializa??o dos sensores com zero;
             obj.s = zeros(2,length(obj.angs));
             obj.s_i = obj.s;
-            obj.s2 = obj.s; %sensor com ruï¿½do de mediï¿½ï¿½o no SC do ambiente
+            obj.s2 = obj.s; %sensor com ru?do de medi??o no SC do ambiente
             
             
             
         end
         
-        function obj = plotConfig(obj)
+        function obj = plotConfig(obj,re)
             
-            % [vlimitex,vlimitey] = scircle2(0,0,1,0); % circulo limite de visï¿½o MATLAB
+            % [vlimitex,vlimitey] = scircle2(0,0,1,0); % circulo limite de vis?o MATLAB
             aux = linspace(0,2*pi*100,100);
             vlimitex = cos(aux)';
             vlimitey = sin(aux)';
-             % plot do robÃ´ em terceira pessoa
+             % plot do robô em terceira pessoa
             xc = vlimitex.*obj.raio;
             yc = vlimitey.*obj.raio;
 
@@ -324,9 +327,19 @@ classdef robo_escoltado
             yc3 = pxyc(2,:)+obj.Pos(2);
             obj.plt.a = plot(xc3,yc3,'k');
             obj.plt.b = plot([obj.Pos(1) obj.Pos(1)+obj.raio*cos(obj.Pos(3))],[obj.Pos(2) obj.Pos(2)+obj.raio*sin(obj.Pos(3))],'r');
-            obj.plt.c = plot(obj.hPos(1,:),obj.hPos(2,:),'c');
+            obj.plt.c = plot(obj.hPos(1,:),obj.hPos(2,:),'k');
             
             obj.plt.d = plot(obj.path(:,1),obj.path(:,2),'--k');
+            
+            % Transparência desejada (0 = totalmente transparente, 1 = totalmente opaco)
+            transparency = 0.25;  % Altere conforme necessário
+            fillColor = [0.2, 0.6, 0.8];  % Cor azul claro, você pode ajustar isso
+            xc = vlimitex.*re;
+            yc = vlimitey.*re;
+            pxyc = [cos(obj.Pos(3)) -sin(obj.Pos(3)) ; sin(obj.Pos(3)) cos(obj.Pos(3))]*[xc' ; yc'];
+            xc4 = pxyc(1,:)+obj.Pos(1);
+            yc4 = pxyc(2,:)+obj.Pos(2);
+            obj.plt.e = patch(xc4, yc4, fillColor, 'EdgeColor', 'none', 'FaceAlpha', transparency);
 %             obj.plt.e = plot(obj.e_path(1,:),obj.e_path(2,:),'b');
 
         end
@@ -342,4 +355,3 @@ classdef robo_escoltado
         end
     end
 end
-

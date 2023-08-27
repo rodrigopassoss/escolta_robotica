@@ -1,13 +1,11 @@
 function ZUADENTO_SIMULADOR(experimento,robo,escoltado,mapabmp,tempo_max,habilitaPlot,habilitaDinamica,nRobos)
   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% AQUI VAI O Cï¿½DIGO DO P3DX_SIM_CONTROL QUE VAI COMEï¿½AR COMO O BOTï¿½O %%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% inicializaï¿½ï¿½o das variï¿½veis globais
+% inicialização das variáveis globais
 global  Pdes  Mapa Mapa2 i tempo tamos;
 
 
-tamos = experimento.tamos; % tempo de amostragem da simulaï¿½ï¿½o em segundos
+tamos = experimento.tamos; % tempo de amostragem da simualção em segundos
 escoltado = escoltado.configuracao_inicial(experimento,tempo_max); 
 for k = 1:nRobos
     robo(k) = robo(k).configuracao_inicial(experimento,escoltado,tempo_max,k); 
@@ -21,16 +19,16 @@ A = A.*255;
 %A = rgb2gray(A);
 Mapa2 = A;
 escoltado.Mapa2 = Mapa2;
-% A = A(end:-1:1,:); % utilizada no plot para parecer a imagem no SC padrï¿½o
+% A = A(end:-1:1,:); % utilizada no plot para parecer a imagem no SC padrão
 [Ay , Ax] = find(A~=255);
 Mapa = [Ax,Ay]';
 escoltado.Mapa = Mapa;
 
-%% inicializaÃ§Ã£o da posiÃ§Ã£o de destino do robÃ´
+%% inicialização da posição de destino do robô
 Pdes = [experimento.dx ; experimento.dy ];
 escoltado.Pdes = Pdes;
 
-% inicializaï¿½ï¿½o das variï¿½veis do loop while
+% inicialização das variáveis do loop while
 tempo = 0:tamos:tempo_max;  % controle de tempo
 i = 0;  % contador
 
@@ -40,48 +38,50 @@ l_d = experimento.l_d;
 fi_d = experimento.fi_d;
 % Variaveis para simulacao da falha
 robosComFalhas = []; status=ones(1,nRobos); 
-iteracao_falha = 450;
+iteracao_falha = 1e100; %450 
+robo_falhado = 6;
 while  (~colidiu && (i*tamos<tempo_max) && d>5)
       % distancia maior que 5 cm ou vlin maior q 5 cm/s ou vrot maior que 0.1 rad/s
     tic     
-    % atualizaï¿½ï¿½o das variï¿½veis de controle de tempo
+    % atualização das variáveis de controle de tempo
     i = i+1;          
     tempo(i+1) = i*tamos;   
     
-    % SimulaÃ§Ã£o do RobÃ´ escoltado
+    % simulação do robô escoltado
     escoltado = escoltado.simulacao_sensores(updateMapa(A,robo,nRobos));
     escoltado = escoltado.controle_e_navegacao(i);
     escoltado = escoltado.simulacao(tamos,i);
     if escoltado.colidiu, colidiu = 1; end
     
-    % SimulaÃ§Ã£o de parada
+    % simulação de parada
     Robos = setdiff([1:nRobos],robosComFalhas);
-    % SimulaÃ§Ã£o dos escoltadores
+    % simulação dos escoltadores
     x = []; y = []; phi = [];  
     for k = 1:nRobos
                 
         robo(k) = robo(k).simulacao_sensores(updateMapa2(A,robo,escoltado,nRobos,robosComFalhas,k));
 %         lider = 1;
-        % DefiniÃ§Ã£o do setPoint de distÃ¢ncia
+        % Definição do setPoint de distância
         n = length(Robos);
-        [l_d,robo_] = min([robo(:).l_d]);  % Raio de ProteÃ§Ã£o        
-        robo(k).constantes_controle(4) = cot(pi/n);
+        [l_d,robo_] = min([robo(Robos).l_d]);  % Setpoit de distância       
+        robo(k).constantes_controle(4) = n; % Número de Robôs
+        robo(k).r_p = min([robo(Robos).l_obst]); % Raio de Proteção
         
-        Re = sqrt(min(robo(robo_).v_sensor(robo(robo_).sensorObstaculo))^2 - (l_d*sin(pi/n))^2) + l_d*cos(pi/n);
+%         Re = sqrt(min(robo(robo_).v_sensor(robo(robo_).sensorObstaculo))^2 - (l_d*sin(pi/n))^2) + l_d*cos(pi/n);
 
-        % Setpoint de Ã¢ngulo
-        fi_d(Robos) = angConvert(2*pi*[0:n-1]/n);
+%         setpoint_de_angulo2
+        fi_d(Robos) = angConvert(2*pi*[0:n-1]/n); % Setpoint de Ângulo
+
         
-        
-        %%%%%%%%%%%%%%%%%%% CONTROLADOR INï¿½CIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%% CONTROLADOR INÍCIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %s_i = sensores no sistema de coordenadas do ambiente
-        %    = sem ruï¿½do e nï¿½o deve ser usado pelo controlador
+        %    = sem ruído e não deve ser usado pelo controlador
 
-        %s = sensores no sistema de coordenadas do robï¿½
-        %  = com ruï¿½do adicionado. Esse pode ser utilizado pelo controlador.
+        %s = sensores no sistema de coordenadas do robô
+        %  = com ruído adicionado. Esse pode ser utilizado pelo controlador.
 
         %s2 = sensores no sistema de coordenadas do ambiente
-        %  = com ruï¿½do adicionado. Esse pode ser utilizado pelo controlador.
+        %  = com ruído adicionado. Esse pode ser utilizado pelo controlador.
         tamos_controle = 0.01; %atualizar a cada 40 ms
         
         if mod(tempo(i),tamos_controle) == 0
@@ -89,11 +89,11 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
 %                 fi_d = 2*pi*(k-1)/nRobos;
 %                 fi_d(k) = 2*pi*(k-1)/nRobos;
                 robo(k) = robo(k).controle_e_navegacao(i,tamos_controle,tempo(i),l_d,fi_d(k),...
-                                                       escoltado); 
-                if ~robo(k).falhou
-                    [pos,phi_] = robo(k).envia_pacote(escoltado);
-                    x = [x pos(1)]; y = [y pos(2)]; phi = [phi phi_];
-                end
+                                                       escoltado,habilitaDinamica); 
+%                 if ~robo(k).falhou
+%                     [pos,phi_] = robo(k).envia_pacote(escoltado);
+%                     x = [x pos(1)]; y = [y pos(2)]; phi = [phi phi_];
+%                 end
                 status(k) = ~robo(k).falhou;
 
         end
@@ -101,37 +101,59 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
 
         %%%%%%%%%%%%%%%%%%%%% CONTROLADOR FIM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        %%%%%%%%%%%%%%%%%%% SIMULAÃ‡ÃƒO INÃCIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%% SIMULAÃ‡ÃƒO INÃ?CIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if habilitaDinamica==1
             robo(k) = robo(k).simulacao(tamos,i);
         else
             robo(k) = robo(k).simulacao_apenas_cinematica(tamos,i);
         end
 
-%         dist = sqrt( (Pdes(1)-Pos(1))^2 + (Pdes(2)-Pos(2))^2 ); % atualiza a distï¿½ncia para o destino
          if robo(k).colidiu
+            robo(k) = robo(k).simulacao_falha();
+         end
+         
+         % Parda de comunicação
+         dists_to_robots = [];
+         for l = setdiff(Robos,k)
+             dists_to_robots = [dists_to_robots ...
+                                sqrt((robo(k).Pos(1) - robo(l).Pos(1))^2 ...
+                                + (robo(k).Pos(2) - robo(l).Pos(2))^2)];
+         end    
+         if min(dists_to_robots)>robo(k).Rc
+            robo(k) = robo(k).simulacao_falha();
+         end
+         
+         if escoltado.colidiu
              colidiu = 1;
              break;
          end
     end
     
-    % Dados da comunicaÃ§Ã£o broadcast
-    experimento.dados_grupo = struct('x',x,...
-                                     'y',y,...
-                                     'phi',phi);
-    % Captura de falha dos robÃ´s
+    % Dados da comunicação broadcast
+%     experimento.dados_grupo = struct('x',x,...
+%                                      'y',y,...
+%                                      'phi',phi);
+    % Captura de falha dos robôs
     robosComFalhas = find(status==0);
     
-    % simulaÃ§Ã£o de Falha 
+    % simulação de Falha 
     if i==iteracao_falha
-         k = 5 + 0*randi([2 nRobos]);
-         robo(k) = robo(k).simulacao_falha();  
+%          k = Robos(randi([2 length(Robos)]));
+         k = robo_falhado;
+         robo(k) = robo(k).simulacao_falha();
+         iteracao_falha = 3500;
+         robo_falhado = 5;
+         if habilitaPlot, plot_graficos_online; end
     end
  
 %     experimento.l_d = [experimento.l_d l_d];
     d = norm(escoltado.Pos(1:2)-Pdes);
     
-    % PLOT DO GRï¿½FICO "ON LINE"
+    Re = sqrt((robo(1).r_p).^2 - (l_d.*sin(pi/n)).^2) + l_d.*cos(pi/n);
+    if imag(Re)~=0, Re=NaN; end
+    experimento.re_d = [experimento.re_d Re];
+    
+    % PLOT DO GRÁFICO "ON LINE"
     tamos_plot = 0.1; %atualizar a cada 100 ms
     if mod(tempo(i),tamos_plot) == 0
         if habilitaPlot, plot_graficos_online; end
@@ -139,7 +161,6 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
     i*tamos
     
 end
-
 
 
 tempo = tempo(1:i);

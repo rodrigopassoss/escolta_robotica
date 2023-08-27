@@ -1,25 +1,25 @@
 function [A, Path] = RRT(C_obs,q_init, q_goal, passo, sMap, rRobo)
 
-    q_curr = q_init(1:2);       % Atribui q_init como n√≥ atual
-    A = [q_curr, 0];  % √Årvore
-    flag = 1;              % Bandeira para a finaliza√ß√£o do algor√≠tmo
+    q_curr = q_init(1:2);       % Atribui q_init como nÛ atual
+    A = [q_curr, 0];  % ¡rvore
+    flag = 1;              % Bandeira para a finalizaÁ„o do algorÌtmo
     k = 0;
     while (flag)
         k = k + 1;
-       % Gera um posi√ß√£o aleat√≥ria 
+       % Gera um posiÁ„o aleatÛria 
        q_rand = rand(1,2).*sMap;
-       % Obt√©m o visinho mais pr√≥ximo
+       % ObtÈm o visinho mais prÛximo
        [~, i_near]= min(((q_rand(1)-A(:,1)).^2 + (q_rand(2)-A(:,2)).^2).^0.5);
        q_near = A(i_near,1:2);
-       % C√°lcula o avan√ßo da √°rvore
+       % C·lcula o avanÁo da ·rvore
        q_step = passo.*(q_rand-q_near)./norm(q_rand-q_near);
-       % Atualiza o n√≥ atual
+       % Atualiza o nÛ atual
        q_curr = q_near + q_step;
-       % Verifica se o novo n√≥ 
+       % Verifica se o novo nÛ 
        [dObs, ~]= min(((q_curr(1)-C_obs(1,:)).^2 + (q_curr(2)-C_obs(2,:)).^2).^0.5);
        [dThree, ~]= min(((q_curr(1)-A(:,1)).^2 + (q_curr(2)-A(:,2)).^2).^0.5);
        if ( (rRobo < dObs) && (dThree==passo) && (~collision_detection(C_obs',q_near,q_curr,rRobo)))
-             % Adiciona na √†rvore
+             % Adiciona na ‡rvore
              A = [A; [q_curr,i_near]]; 
              if (norm(q_curr-q_goal(1:2)) < passo)
                  flag = 0; 
@@ -30,7 +30,7 @@ function [A, Path] = RRT(C_obs,q_init, q_goal, passo, sMap, rRobo)
        
     end
     
-    % Obten√ß√£o do Caminho
+    % ObtenÁ„o do Caminho
     [N,~]= size(A); i_curr = N;
     Path = A(i_curr,1:2);
     while (i_curr~=1)

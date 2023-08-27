@@ -1,7 +1,7 @@
 function A = updateMapa2(Mapa,robo,escoltado,nRobos,robosComFalhas,idx)
     %updateMapa Summary of this function goes here
-    Bposx = []; % PosiÃ§Ã£o x do corpo do robÃ´
-    Bposy = []; % PosiÃ§Ã£o y do corpo do robÃ´
+    Bposx = []; % Posição x do corpo do robô
+    Bposy = []; % Posição y do corpo do robô
     vec = 1:nRobos;
     for k = setdiff(vec,idx)
         Bposx = [Bposx; round(robo(k).Pos(1) + robo(k).raio*cos(2*pi*[0:99]/100))];
@@ -27,8 +27,8 @@ function A = updateMapa2(Mapa,robo,escoltado,nRobos,robosComFalhas,idx)
            end
        end
     end
-    Bposx = []; % PosiÃ§Ã£o x do corpo do robÃ´
-    Bposy = []; % PosiÃ§Ã£o y do corpo do robÃ´
+    Bposx = []; % Posição x do corpo do robô
+    Bposy = []; % Posição y do corpo do robô
     Bposx = [Bposx round(escoltado.Pos(1) + escoltado.raio*cos(2*pi*[0:99]/100))];
     Bposy = [Bposy round(escoltado.Pos(2) + escoltado.raio*sin(2*pi*[0:99]/100))];
     N = length(Bposx);
@@ -36,4 +36,3 @@ function A = updateMapa2(Mapa,robo,escoltado,nRobos,robosComFalhas,idx)
         A(Bposy(k),Bposx(k)) = 100;
     end
 end
-

@@ -38,7 +38,7 @@ l_d = experimento.l_d;
 fi_d = experimento.fi_d;
 % Variaveis para simulacao da falha
 robosComFalhas = []; status=ones(1,nRobos); 
-iteracao_falha = 1e100; %450 
+iteracao_falha = 1e10; %450 
 robo_falhado = 6;
 while  (~colidiu && (i*tamos<tempo_max) && d>5)
       % distancia maior que 5 cm ou vlin maior q 5 cm/s ou vrot maior que 0.1 rad/s
@@ -61,16 +61,22 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
                 
         robo(k) = robo(k).simulacao_sensores(updateMapa2(A,robo,escoltado,nRobos,robosComFalhas,k));
 %         lider = 1;
-        % Definição do setPoint de distância
         n = length(Robos);
-        [l_d,robo_] = min([robo(Robos).l_d]);  % Setpoit de distância       
         robo(k).constantes_controle(4) = n; % Número de Robôs
-        robo(k).r_p = min([robo(Robos).l_obst]); % Raio de Proteção
-        
-%         Re = sqrt(min(robo(robo_).v_sensor(robo(robo_).sensorObstaculo))^2 - (l_d*sin(pi/n))^2) + l_d*cos(pi/n);
-
-%         setpoint_de_angulo2
-        fi_d(Robos) = angConvert(2*pi*[0:n-1]/n); % Setpoint de Ângulo
+        %--- Definição dos setPoints
+        % Setpoit de distância
+        [l_d,~] = min([robo(Robos).l_d]);  
+        % Setpoit de Angulo
+        deltas = [robo(Robos).delta_fi_d];
+                % -- Ponderação
+                l_obst = [robo(Robos).l_obst];
+                pesos = 1./(l_obst);
+                pesos = pesos/sum(pesos);
+                % --
+        delta_fi_d = pesos*deltas';
+        fi_d(k) = angConvert((2*pi*(k-1)/n) + delta_fi_d);
+%          fi_d(k) = angConvert((2*pi*(k-1)/n) + robo(k).delta_fi_d);
+        % ------
 
         
         %%%%%%%%%%%%%%%%%%% CONTROLADOR INÍCIO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -112,13 +118,16 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
             robo(k) = robo(k).simulacao_falha();
          end
          
-         % Parda de comunicação
-         dists_to_robots = [];
-         for l = setdiff(Robos,k)
+         % simulação da comunicação
+         dists_to_robots = []; outros_robos = setdiff(Robos,k);
+         for l = outros_robos
              dists_to_robots = [dists_to_robots ...
                                 sqrt((robo(k).Pos(1) - robo(l).Pos(1))^2 ...
                                 + (robo(k).Pos(2) - robo(l).Pos(2))^2)];
-         end    
+         end 
+         idc_vizinhos = find(dists_to_robots<robo(k).Rc);
+         robo(k) = robo(k).comunicacao(robo,outros_robos(idc_vizinhos));
+         % Parda de comunicação
          if min(dists_to_robots)>robo(k).Rc
             robo(k) = robo(k).simulacao_falha();
          end
@@ -150,8 +159,11 @@ while  (~colidiu && (i*tamos<tempo_max) && d>5)
     d = norm(escoltado.Pos(1:2)-Pdes);
     
     Re = sqrt((robo(1).r_p).^2 - (l_d.*sin(pi/n)).^2) + l_d.*cos(pi/n);
+%     Re2 = sqrt((robo(1).r_p).^2 - (l_d.*sin((2*pi-alfa)/(2*(n-1)))).^2) + l_d.*cos((2*pi-alfa)/(2*(n-1)));
     if imag(Re)~=0, Re=NaN; end
     experimento.re_d = [experimento.re_d Re];
+%     experimento.re_d2 = [experimento.re_d2 Re2];
+    experimento.rp = [experimento.rp robo(1).r_p];
     
     % PLOT DO GRÁFICO "ON LINE"
     tamos_plot = 0.1; %atualizar a cada 100 ms

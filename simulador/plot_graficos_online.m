@@ -30,6 +30,9 @@ for k = 1:nRobos
         dx = v*cos(robo(k).Pos(3)) - robo(k).L*w*sin(robo(k).Pos(3));
         dy = v*sin(robo(k).Pos(3)) + robo(k).L*w*cos(robo(k).Pos(3));
         quiver(robo(k).Pos(1),robo(k).Pos(2),dx,dy,'r','MaxHeadSize',3,'linewidth',1);
+        % centroids do slacs
+        [centroid] = robo(k).slacs();
+        plot(centroid(1),centroid(2),'.g','MarkerSize',20);
 end
 plot([formX formX(1)],[formY formY(1)],'--b');
 xlabel('x[cm]');

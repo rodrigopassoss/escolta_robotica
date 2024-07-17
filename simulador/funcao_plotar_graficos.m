@@ -3,7 +3,7 @@ function funcao_plotar_graficos(arquivo,nRobos)
 load(arquivo);
 
 if habilitaDinamica
-    legenda=[];     rpp = [];
+    legenda=[];   
     for k = setdiff(1:nRobos,robosComFalhas)
         g = figure(30+k);
         set(g,'name',['Evolução no tempo das velocidades linear e angular do robô ',num2str(k)]);
@@ -144,7 +144,7 @@ if habilitaDinamica
     %     legend('desejado','medido')
         g7 = figure(70);
         set(g7,'name',['Evolução no tempo das variaveis r_p e r_e dos robôs']);
-        subplot(311)
+        subplot(211)
 %         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.l_d)
         hold on; grid on
         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.r_p,robo(k).colors(k),'linewidth',2)
@@ -152,30 +152,28 @@ if habilitaDinamica
         xlabel('tempo em segundos')
         ylabel('l_{obst}')
         legend(legenda);
-
-        rpp = [rpp;robo(k).plotInfo.r_p];
     end
         g7 = figure(70);
-        subplot(312)
-%         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.fi_d)
-        hold on; grid on
-        plot(robo(k).plotInfo.tempos,min(rpp),'b','linewidth',2)
-        plot(robo(k).plotInfo.tempos,robo(k).plotInfo.r_p_min,'--k','linewidth',1)
-%         plot(robo(k).plotInfo.tempos,(robo(k).plotInfo.tempos.^0).*experimento.fi_d(k),'--k')
-        xlabel('tempo em segundos')
-        ylabel('r_p')
-        subplot(313)
+%         subplot(312)
+% %         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.fi_d)
+%         hold on; grid on
+%         plot(robo(k).plotInfo.tempos,experimento.rp,'b','linewidth',2)
+%         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.r_p_min,'--k','linewidth',1)
+% %         plot(robo(k).plotInfo.tempos,(robo(k).plotInfo.tempos.^0).*experimento.fi_d(k),'--k')
+%         xlabel('tempo em segundos')
+%         ylabel('r_p')
+        subplot(212)
 %         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.fi_d)
         hold on; grid on
         plot(robo(k).plotInfo.tempos,experimento.re_d,'b','linewidth',2)
-        plot(robo(k).plotInfo.tempos,escoltado.Rs*(experimento.re_d).^0,'--k','linewidth',1)
+%         plot(robo(k).plotInfo.tempos,experimento.re_d2,'c','linewidth',2)
+        plot(robo(k).plotInfo.tempos,experimento.rp.*(experimento.re_d).^0,'--k','linewidth',1)
 %         plot(robo(k).plotInfo.tempos,(robo(k).plotInfo.tempos.^0).*experimento.fi_d(k),'--k')
         xlabel('tempo em segundos')
         ylabel('r_e')
 else
     
     legenda = [];
-    rpp = []
     for k = setdiff(1:nRobos,robosComFalhas)
 %     for k = robosComFalhas
         
@@ -255,7 +253,7 @@ else
 
         g7 = figure(70);
         set(g7,'name',['Evolução no tempo das variaveis r_p e r_e dos robôs']);
-        subplot(311)
+        subplot(211)
 %         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.l_d)
         hold on; grid on
         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.r_p,robo(k).colors(k),'linewidth',2)
@@ -264,22 +262,22 @@ else
         ylabel('l_{obst}')
         legend(legenda);
 
-        rpp = [rpp;robo(k).plotInfo.r_p];
     end
         g7 = figure(70);
-        subplot(312)
-%         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.fi_d)
-        hold on; grid on
-        plot(robo(k).plotInfo.tempos,min(rpp),'b','linewidth',2)
-        plot(robo(k).plotInfo.tempos,robo(k).plotInfo.r_p_min,'--k','linewidth',1)
-%         plot(robo(k).plotInfo.tempos,(robo(k).plotInfo.tempos.^0).*experimento.fi_d(k),'--k')
-        xlabel('tempo em segundos')
-        ylabel('r_p')
-        subplot(313)
+%         subplot(312)
+% %         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.fi_d)
+%         hold on; grid on
+%         plot(robo(k).plotInfo.tempos,experimento.rp,'b','linewidth',2)
+%         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.r_p_min,'--k','linewidth',1)
+% %         plot(robo(k).plotInfo.tempos,(robo(k).plotInfo.tempos.^0).*experimento.fi_d(k),'--k')
+%         xlabel('tempo em segundos')
+%         ylabel('r_p')
+        subplot(212)
 %         plot(robo(k).plotInfo.tempos,robo(k).plotInfo.fi_d)
         hold on; grid on
         plot(robo(k).plotInfo.tempos,experimento.re_d,'b','linewidth',2)
-        plot(robo(k).plotInfo.tempos,escoltado.Rs*(experimento.re_d).^0,'--k','linewidth',1)
+%         plot(robo(k).plotInfo.tempos,experimento.re_d2,'c','linewidth',2)
+        plot(robo(k).plotInfo.tempos,experimento.rp.*(experimento.re_d).^0,'--k','linewidth',1)
 %         plot(robo(k).plotInfo.tempos,(robo(k).plotInfo.tempos.^0).*experimento.fi_d(k),'--k')
         xlabel('tempo em segundos')
         ylabel('r_e')

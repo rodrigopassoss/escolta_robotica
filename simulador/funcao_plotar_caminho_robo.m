@@ -64,6 +64,6 @@ ylim([-30 linhas+30])
 plot(Ax,Ay,'.','MarkerEdgeColor','k','MarkerSize',2)
 plot(Pdes(1),Pdes(2),'.','MarkerEdgeColor','r','MarkerSize',20)
 set(gca,'xtick',[],'ytick',[])
-nome_do_arquivo = ['C:\Users\rodri\Documents\escolta_robotica\simulador\dados_salvos\plot_geral.svg'];
+nome_do_arquivo = ['D:\Documents\escolta_robotica\simulador\dados_salvos\plot_geral.svg'];
 saveas(gcf, nome_do_arquivo, 'svg');
 drawnow

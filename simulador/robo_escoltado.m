@@ -81,6 +81,9 @@ classdef robo_escoltado
             obj.Modcin = Mc; %modelo cinemático direto
             obj.ganhoft = [B/A_ ; D/C_];
             % U = inv(obj.Modcin)*[V ; W];
+            
+            obj.ruido = 0; %desvio padrão do ruído do sensor
+            obj.saturacao = 200; %limite do alcance sensorial em cm
 
             fi = [1 ; 1]./[obj.ganhoft];
             aux = obj.Modcin*(fi);
@@ -95,7 +98,7 @@ classdef robo_escoltado
         
             %%% Controlador Deliberativo com a RRT
             if iteracao == 1
-                passo = 50; rRobo = 45; 
+                passo = 50; rRobo = 30; 
                 sMap = size(obj.Mapa2');
                 [~, path2] = RRT(obj.Mapa,obj.Pdes', obj.Pos', passo, sMap, rRobo) ;
 

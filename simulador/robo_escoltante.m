@@ -17,6 +17,7 @@ classdef robo_escoltante
         Ra
         Rc
     % Informações sensoriais do robô
+        id
         Pos 
         hPos
         Pdes
@@ -26,19 +27,24 @@ classdef robo_escoltante
         s
         s2 
         angs
-        posEscoltado
-        posEscoltado_
+%         posEscoltado
+%         posEscoltado_
         orientacaoEscoltado
         sensorEscoltado  % No sistema de coordenadas do Robô
         sensorObstaculo
         sensorRobos
         colidiu
         falhou
+    % Comunicação
+        nnPos
+        nnv_sensor
     % Variáveis do Controlador
         X_c % [l_e fi_e th_e]
         constantes_controle
         Ksi_r
         l_d
+        delta_fi_d
+%         s_bordas
         l_desejado
         l_obst
     % Das especificações
@@ -58,7 +64,7 @@ classdef robo_escoltante
     end
     
     methods
-        function obj = robo_escoltante()
+        function obj = robo_escoltante(id,k1,k2,k3)
             %%% Parâmetros de configuração das características do robô.
             % Wd/FId = A/(s+B); %velocidade angula na saída em rad/s
             %    -15.66
@@ -106,11 +112,21 @@ classdef robo_escoltante
             aux = obj.Modcin*(fi);
             obj.Wmax = aux(2); %cálculo da vellcidade angular máxima a partir do modelo identificado
             
-            obj.Rs = 30;
-            obj.Ra = 120;
-            obj.Rc = 200;
-            obj.l_obst = 120;
-            obj.r_p = 120;
+            obj.Rs = 30; % Raio de segurança
+            obj.Ra = 60; % Abrangência do sensor
+            obj.Rc = 100; % Raio de Comunicação
+            obj.l_obst = 60; % Inicialização
+            obj.r_p = 60; % Raio de proteção
+            
+            obj.constantes_controle = [k1;k2;k3];
+            obj.ruido = 0; %desvio padrão do ruído do sensor
+            obj.saturacao = 60; %limite do alcance sensorial em cm
+            obj.l_d = 50;
+            obj.r_p = 60;
+            obj.delta_fi_d = 0;
+            obj.id = id;
+            
+%             obj.s_bordas = zeros(2,4);
             
             obj.err_i = [0;0];
             obj.Freal = [0;0];
@@ -120,43 +136,12 @@ classdef robo_escoltante
         
         function obj = controle_e_navegacao(obj,iteracao,tamos,tempo,l_d,fi_d,escoltado,habilitaDinamica)
             
-%             Desai_estimacaoXY_ideal
-            Desai_PosEscoltadoConhecida
-%             Desai_estimacaoXY_Triang01
+%             Desai_PosEscoltadoConhecida
+            Desai_PosEscoltadoConhecida2
             
                         
-        end
-        
-        function obj = TriangToTal(obj,dados)
-            
-            x1 = dados.x(1) - dados.x(2); y1 = dados.y(1) - dados.y(2);
-            x3 = dados.x(3) - dados.x(2); y3 = dados.y(3) - dados.y(2);
-            
-            T12 = cot(dados.phi(2)-dados.phi(1)); T23 = cot(dados.phi(3)-dados.phi(2));
-            T31 = (1+T12*T23)/(T12+T23);
-            
-            x12 = x1 + T12*y1; y12 = y1 - T12*x1;
-            x23 = x3 - T23*y3; y23 = y3 + T23*x3;
-            x31 = (x1 + x3) + T31*(y3-y1); y31 = (y1 + y3) - T31*(x3-x1);
-            
-            k31 = x1*x3 + y1*y3 + T31*(x1*y3-x3*y1);
-            
-            D = (x12-x23)*(y23-y31) - (y12-y23)*(x23-x31);
-            
-            obj.posEscoltado(1:2) = [dados.x(2);dados.y(2)]...
-                                    + (k31/D)*[(y12-y23) ; (x23-x12) ];
-            
-            obj.posEscoltado(3) = atan2(dados.y(1)-obj.posEscoltado(2),dados.x(1)-obj.posEscoltado(1))-dados.phi(1);
-            
-        end
+        end      
              
-        function [pos,psi] = envia_pacote(obj,escoltado)
-%             R = [cos(obj.Pos(3)) sin(obj.Pos(3)) 0 ; -sin(obj.Pos(3)) cos(obj.Pos(3)) 0 ; 0 0 1];
-%             pvel = R\obj.Ksi_r;
-            pos = obj.Pos';
-            psi = atan2(obj.Pos(2)-escoltado.Pos(2),obj.Pos(1)-escoltado.Pos(1))-obj.Pos(3);
-        end
-
         function [Ksir_real, X] = dinamica_zuadento(obj,Tamos)
                
                 U = [obj.U obj.U obj.U]; %[Ud ; Ue]
@@ -366,8 +351,8 @@ classdef robo_escoltante
             obj.plotInfo.tempos  = [];
             obj.X = [0 ; 0]; % estado do sistema para simula??o din?mica
             obj.X_c = [experimento.l_ei(k) ; experimento.fi_ei(k) ; experimento.theta_ei(k)]; % estado do controlador
-            obj.posEscoltado = escoltado.Pos;
-            obj.posEscoltado_ = escoltado.Pos(1:2);
+%             obj.posEscoltado = escoltado.Pos;
+%             obj.posEscoltado_ = escoltado.Pos(1:2);
             obj.orientacaoEscoltado = escoltado.Pos(3);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % ?NGULOS NO SISTEMA DE COORDENADAS DO ROB?! -> 0 graus ? o eixo X (eixo de movimenta??o)
@@ -396,7 +381,7 @@ classdef robo_escoltante
             obj.plt.a = plot(xc3,yc3,'b');
             obj.plt.b = plot([obj.Pos(1) obj.Pos(1)+obj.raio*cos(obj.Pos(3))],[obj.Pos(2) obj.Pos(2)+obj.raio*sin(obj.Pos(3))],'r');
 %             obj.plt.c = plot(obj.s2(1,:),obj.s2(2,:),'.','MarkerEdgeColor',obj.colors(2),'MarkerSize',7);
-            obj.plt.c = plot(obj.Pdes(1),obj.Pdes(2),'.','MarkerEdgeColor','m','MarkerSize',7);
+%             obj.plt.c = plot(obj.Pdes(1),obj.Pdes(2),'.','MarkerEdgeColor','m','MarkerSize',7);
 %             obj.plt.d = plot(obj.Pdes_2(1),obj.Pdes_2(2),'.','MarkerEdgeColor',obj.colors(5),'MarkerSize',7);
 
 %             if k<=3
@@ -412,7 +397,8 @@ classdef robo_escoltante
             xc4 = pxyc(1,:)+obj.Pos(1);
             yc4 = pxyc(2,:)+obj.Pos(2);
             obj.plt.f = patch(xc4, yc4, fillColor, 'EdgeColor', 'none', 'FaceAlpha', transparency);
-
+%             obj.plt.c = plot(obj.s2(1,:),obj.s2(2,:),'.','MarkerEdgeColor','m','MarkerSize',5);
+%             obj.plt.c = plot(obj.s_bordas(1,obj.s_bordas(1,:)>0),obj.s_bordas(2,obj.s_bordas(1,:)>0),'.','MarkerEdgeColor','m','MarkerSize',5);
 
         end
         
@@ -476,6 +462,7 @@ classdef robo_escoltante
 
         end
         
+        
         function [V,W] = desviar_obstaculo2(obj,Pdes)
             %% Controle Reativo - Campos Potênciais
             ka = 1;
@@ -511,6 +498,50 @@ classdef robo_escoltante
         
         function obj = simulacao_falha(obj)
                 obj.falhou = 1;
+        end  
+        
+        function [centroid] = slacs(obj)
+            if isempty(obj.nnv_sensor)
+                [samples] = obj.slacs_sample_generation(obj.Pos,obj.v_sensor,10);
+                centroid = mean(samples,2);
+            else
+                [samples1] = obj.slacs_sample_generation(obj.Pos,obj.v_sensor,10);
+                [samples2] = obj.slacs_sample_generation(obj.nnPos,obj.nnv_sensor,10);
+                samples = [samples1,samples2];
+                d = sqrt((obj.Pos(1)-samples(1,:)).^2 + (obj.Pos(2)-samples(2,:)).^2);
+                d_nn = sqrt((obj.nnPos(1)-samples(1,:)).^2 + (obj.nnPos(2)-samples(2,:)).^2);
+                samples = samples(:,d<d_nn);
+                centroid = mean(samples,2); 
+            end          
+        end
+        
+        function [samples] = slacs_sample_generation(obj,pos,s,Np)
+                Ns = numel(s);
+                angulo = linspace(1,360,Ns);
+                samples = [];
+                for i=1:Ns
+                    dir = [cosd(angulo(i)-pos(3));sind(angulo(i)-pos(3))];
+                    p = pos(1:2);
+                    for j=1:Np
+                        p = p + (obj.Ra/Np)*dir;
+                        dist = sqrt((pos(1)-p(1))^2 + (pos(2)-p(2))^2);
+                        if dist > s(i)
+                            break;
+                        end
+                        samples = [samples, p];
+                    end    
+                end
+        end
+        
+        function [obj] = comunicacao(obj, robo, vizinhos)
+            menor_distancia = 1e10;
+            for i = vizinhos
+                dist = sqrt((obj.Pos(1)-robo(i).Pos(1)).^2 + (obj.Pos(2)-robo(i).Pos(2)).^2);
+                if dist < menor_distancia
+                    obj.nnPos = robo(i).Pos;
+                    obj.nnv_sensor = robo(i).v_sensor;
+                end
+            end
         end
     end
 end

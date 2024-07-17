@@ -87,14 +87,16 @@
             alpha = pi/obj.constantes_controle(4);
             Rs = obj.Rs; Ra = obj.Ra; %Rd = obj.l_desejado; 
             Rd = cot(alpha)*Ra;
+            if Rd > Ra, Rd=Ra; end
             A = (Rd + Rs)/2;
             B = (Rd - Rs)/2;
-            C = (escoltado.Rs*tan(alpha) + Ra)/2;
+            C = ((escoltado.Rs+Rd)*tan(alpha))/2; %(C = (Ra + Rs)/2) e Ra = Rd*tan(alpha)
             k = (B*sin(alpha))^-1;
 %             k = obj.constantes_controle(3);
 %             alpha = 1;
             obj.l_d = A + B*tanh(k*(lobst-C));
-                        
+               
+            % Debug 
             ang1 = fi_d+th_e;
             obj.Pdes = Pe(1:2) + l_d.*[cos(ang1);sin(ang1)];
             ang2 = fi_ei+th_e;
